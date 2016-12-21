@@ -1,0 +1,11 @@
+{
+	'path': '',
+	'libraries': { },
+	'item_width': '250',
+	'item_height': '362',
+	'width': '1600',
+	'height': '900',
+	'columns': '6',
+	'hotkeys': { },
+	'folders' : { }
+}

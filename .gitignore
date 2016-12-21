@@ -1,0 +1,9 @@
+bin
+target
+out
+.ant-targets-build.xml
+.classpath
+.project
+.settings
+.idea
+*.iml

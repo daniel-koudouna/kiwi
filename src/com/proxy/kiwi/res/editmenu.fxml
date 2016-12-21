@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="900.0" vgap="10.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="kiwi.view.edit.EditController">
+  <columnConstraints>
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="597.0" minWidth="10.0" prefWidth="395.0" />
+    <ColumnConstraints hgrow="SOMETIMES" maxWidth="986.0" minWidth="10.0" prefWidth="795.0" />
+  </columnConstraints>
+  <rowConstraints>
+    <RowConstraints maxHeight="164.0" minHeight="10.0" prefHeight="44.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="272.0" minHeight="10.0" prefHeight="31.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="272.0" minHeight="0.0" prefHeight="200.0" vgrow="SOMETIMES" />
+    <RowConstraints maxHeight="262.0" minHeight="10.0" prefHeight="35.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="216.0" minHeight="5.0" prefHeight="26.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="216.0" minHeight="10.0" prefHeight="110.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="216.0" minHeight="10.0" prefHeight="44.0" vgrow="SOMETIMES" />
+      <RowConstraints maxHeight="216.0" minHeight="10.0" prefHeight="85.0" vgrow="SOMETIMES" />
+  </rowConstraints>
+   <children>
+      <ImageView fx:id="imageView" fitHeight="274.0" fitWidth="194.0" pickOnBounds="true" preserveRatio="true" GridPane.rowSpan="2147483647" />
+      <TextField prefHeight="146.0" prefWidth="600.0" GridPane.columnIndex="1" />
+      <FlowPane fx:id="tagPane" prefHeight="197.0" prefWidth="769.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+         <children>
+            <TextField onAction="#addTag" prefHeight="180.0" prefWidth="769.0" HBox.hgrow="ALWAYS" />
+            <ChoiceBox fx:id="tagChoice" prefHeight="159.0" prefWidth="307.0" HBox.hgrow="ALWAYS" />
+         </children>
+      </HBox>
+      <HBox prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="6">
+         <children>
+            <TextField prefHeight="180.0" prefWidth="769.0" HBox.hgrow="ALWAYS" />
+            <ChoiceBox prefHeight="159.0" prefWidth="307.0" HBox.hgrow="ALWAYS" />
+         </children>
+      </HBox>
+      <Label alignment="CENTER" prefHeight="179.0" prefWidth="769.0" text="Tags" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+      <Label alignment="CENTER" prefHeight="179.0" prefWidth="769.0" text="Artists" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+      <HBox prefHeight="100.0" prefWidth="200.0" spacing="90.0" GridPane.columnIndex="1" GridPane.rowIndex="7">
+         <children>
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="80.0" text="Save" HBox.hgrow="ALWAYS" />
+            <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" prefHeight="150.0" text="Cancel" HBox.hgrow="ALWAYS" />
+         </children>
+      </HBox>
+   </children>
+   <padding>
+      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+   </padding>
+</GridPane>

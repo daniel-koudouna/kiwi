@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.Group?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<fx:root type="javafx.scene.layout.StackPane" maxHeight="300" maxWidth="-Infinity" minHeight="20" minWidth="-Infinity" prefHeight="100.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Group fx:id="group">
+         <children>
+            <ImageView focusTraversable="true" fx:id="view" fitHeight="386.0" fitWidth="585.0" onKeyPressed="#handleKeyPress" pickOnBounds="true" preserveRatio="true" />
+         </children>
+      </Group>
+      <Label fx:id="pagenum" styleClass="text" text="0/0" StackPane.alignment="BOTTOM_RIGHT">
+         <padding>
+            <Insets right="5.0" />
+         </padding></Label>
+      <VBox fx:id="chapters" alignment="CENTER_RIGHT" prefHeight="400.0" prefWidth="298.0" styleClass="chapters">
+         <children>
+
+         </children>
+         <padding>
+            <Insets right="20.0" />
+         </padding>
+      </VBox>
+   </children>
+</fx:root>

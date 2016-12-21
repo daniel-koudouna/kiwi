@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import com.proxy.kiwi.explorer.SearchBox?>
+
+<fx:root type="javafx.scene.layout.HBox" disable="false"
+	focusTraversable="false" maxHeight="-Infinity" maxWidth="-Infinity"
+	minHeight="-Infinity" minWidth="-Infinity" mouseTransparent="false"
+	prefHeight="100.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/8"
+	xmlns:fx="http://javafx.com/fxml/1">
+	<children>
+
+		<HBox fx:id="searchTags" alignment="CENTER" prefHeight="58.0"
+			prefWidth="574.0" spacing="10.0" styleClass="tags" HBox.hgrow="ALWAYS">
+			<children>
+				<TextField fx:id="searchField" alignment="TOP_LEFT"
+					onKeyReleased="#handleInputKeyEvent" prefWidth="261.0" promptText="Seach"
+					HBox.hgrow="ALWAYS" />
+			</children>
+		</HBox>
+
+	</children>
+</fx:root>

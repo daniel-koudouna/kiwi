@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.*?>
+<?import com.proxy.kiwi.explorer.SearchBox?>
+
+<fx:root type="javafx.scene.layout.AnchorPane" disable="false" focusTraversable="false" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mouseTransparent="false" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+  <children>
+    <VBox alignment="TOP_CENTER" layoutX="0.0" layoutY="0.0" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <children>
+        <HBox alignment="CENTER" prefHeight="73.0" prefWidth="900.0" spacing="15.0" style="-fx-background-color:gray;" VBox.vgrow="NEVER">
+          <children>
+            <Label alignment="CENTER" opacity="1.0" styleClass="text" text="Kiwi" textAlignment="CENTER" textFill="WHITE" HBox.hgrow="NEVER">
+              <HBox.margin>
+                <Insets />
+              </HBox.margin>
+            </Label>
+            <ImageView fitHeight="44.0" fitWidth="44.0" mouseTransparent="true" pickOnBounds="true" preserveRatio="true">
+              <image>
+                <Image url="@search.png" />
+              </image>
+            </ImageView>
+				<SearchBox fx:id="searchBox" prefHeight="100.0"></SearchBox>
+                  <Button fx:id="optionsButton" focusTraversable="false" maxHeight="-Infinity" maxWidth="-Infinity" mnemonicParsing="false" onMouseClicked="#showMenu" prefHeight="66.0" prefWidth="64.0" styleClass="settings-btn">
+                     <cursor>
+                        <Cursor fx:constant="HAND" />
+                     </cursor>
+                  </Button>
+          </children>
+          <padding>
+            <Insets left="10.0" right="10.0" />
+          </padding>
+        </HBox>
+            <StackPane prefHeight="453.0" prefWidth="900.0" VBox.vgrow="ALWAYS">
+               <children>
+                  <ScrollPane fx:id="scrollPane" fitToWidth="true" onKeyPressed="#handleKeyEvent" prefHeight="542.0" prefWidth="983.0">
+                     <content>
+                        <FlowPane fx:id="flowPane" focusTraversable="true" onScroll="#scroll" prefHeight="600.0" prefWidth="885.0" />
+                     </content>
+                  </ScrollPane>
+                  <VBox fx:id="loadingBox" alignment="CENTER" prefHeight="156.0" prefWidth="672.0" style="-fx-background-color: rgba(0.3,0.3,0.3,0.3);">
+                     <children>
+                        <Label alignment="CENTER" prefHeight="21.0" prefWidth="446.0" text="Loading Panels" />
+                        <ProgressBar fx:id="loadingBar" prefHeight="23.0" prefWidth="390.0" progress="0.0" />
+                        <Label fx:id="loadingLabel" alignment="CENTER" prefHeight="21.0" prefWidth="568.0" />
+                     </children>
+                  </VBox>
+                  <ScrollPane fx:id="menu" focusTraversable="false" maxWidth="-Infinity" minHeight="-Infinity" prefHeight="155.0" prefWidth="346.0" styleClass="scroll-menu" translateX="346.0" StackPane.alignment="CENTER_RIGHT">
+                     <content>
+                        <VBox cacheShape="false" maxHeight="-Infinity" maxWidth="-Infinity" minWidth="-Infinity" prefHeight="508.0" prefWidth="344.0" scaleShape="false" styleClass="menu">
+                           <children>
+                              <CheckBox fx:id="collapseCheck" focusTraversable="false" mnemonicParsing="false" onAction="#updateView" styleClass="right-menu-item" text="Flatten" />
+                              <Label fx:id="libraryButton" focusTraversable="false" prefHeight="27.0" prefWidth="728.0" styleClass="right-menu-item" text="Libraries">
+                                 <VBox.margin>
+                                    <Insets />
+                                 </VBox.margin>
+                                 <opaqueInsets>
+                                    <Insets />
+                                 </opaqueInsets>
+                              </Label>
+                              <VBox fx:id="libraryMenu" prefHeight="0.0" prefWidth="318.0" VBox.vgrow="NEVER">
+                                 <children>
+                                    <Label focusTraversable="false" onMouseClicked="#changeLibrary" styleClass="sub-menu-item" text="Change Library" />
+                                 </children>
+                              </VBox>
+                              <Label fx:id="hotkeyButton" focusTraversable="false" styleClass="right-menu-item" text="Hotkeys" />
+                              <VBox fx:id="hotkeyMenu" maxHeight="-Infinity" prefHeight="204.0" prefWidth="324.0" VBox.vgrow="NEVER" />
+                           </children>
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                        </VBox>
+                     </content>
+                  </ScrollPane>
+               </children>
+            </StackPane>
+      </children>
+    </VBox>
+  </children>
+</fx:root>
