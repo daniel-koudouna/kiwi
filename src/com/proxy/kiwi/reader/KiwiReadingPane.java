@@ -88,10 +88,15 @@ public class KiwiReadingPane extends StackPane{
 
 		CompletableFuture<Void> folderInit = CompletableFuture.runAsync(() -> {
 
+			stage.setWidth(Config.getIntOption("width"));
+			stage.setHeight(Config.getIntOption("height"));
+
 			folder = Folder.fromFile(path);
 
 			folder.load();
 
+			
+			
 			titleProperty.bind(new SimpleStringProperty("Kiwi - ").concat(folderNameProperty)
 					.concat(" - ").concat(pageProperty.asString()));
 			

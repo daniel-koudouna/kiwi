@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.List;
 
 public class Folders {
 	private static Folder root = null;
@@ -74,6 +75,30 @@ public class Folders {
 		request(root);
 	}
 
+	public static void mergeRoot(List<String>paths) {
+		
+		if (paths.isEmpty()) {
+			return;
+		}
+		
+		File rootFile = new File(paths.get(0));
+		
+		root = new FileFolder(rootFile.getName(),paths.get(0),null);
+		
+		for (int i = 1; i < paths.size(); i++) {
+			File other = new File(paths.get(i));
+			FileFolder otherFolder = new FileFolder(other.getName(),paths.get(i),null);
+			otherFolder.getSubfolders().forEach(f -> {
+				f.setParent(root);
+			});
+			otherFolder.getSubfolders().forEach(root::addFolder);
+		}
+		
+		clean(root);
+		
+		request(root);
+	}
+	
 	public String getImagePath(Folder folder) {
 		if (Config.getFolderImage(folder.getName()) != null) {
 			return Config.getFolderImage(folder.getName());

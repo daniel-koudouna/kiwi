@@ -1,7 +1,9 @@
 package com.proxy.kiwi.explorer;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -130,7 +132,7 @@ public class SearchBox extends HBox{
 		onSingleHandler = r;
 	}
 	
-	public boolean accept(FolderPanel panel, boolean collapse) {
+	public boolean accept(FolderPanel panel, boolean collapse, HashMap<String, Boolean> visiblePaths) {
 		allTags = Config.getTags();
 
 		
@@ -141,6 +143,14 @@ public class SearchBox extends HBox{
 			return false;
 		}
 
+		// Check that path is visible
+		for (Entry<String,Boolean> entry : visiblePaths.entrySet()) {
+			if (folder.getFilenameProperty().get().contains(entry.getKey()) && !entry.getValue()) {
+				return false;
+			}	
+		}
+
+		
 		String search = searchField.textProperty().getValueSafe().toLowerCase().trim();
 		
 		collapse = collapse || ( search.startsWith(TAG_PREFIX) && search.length() > MIN_TAG_LENGTH) || !tags.isEmpty();

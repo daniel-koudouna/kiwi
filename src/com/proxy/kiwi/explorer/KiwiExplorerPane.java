@@ -2,9 +2,11 @@ package com.proxy.kiwi.explorer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 
 import com.proxy.kiwi.app.KiwiApplication;
 import com.proxy.kiwi.core.folder.Folder;
@@ -76,6 +78,8 @@ public class KiwiExplorerPane extends AnchorPane{
 
 	private Stage stage;
 
+	private HashMap<String,Boolean> visiblePaths;
+
 	public KiwiExplorerPane(Stage stage, String path) {
 
 		this.stage = stage;
@@ -86,8 +90,16 @@ public class KiwiExplorerPane extends AnchorPane{
 
 	public void init() {
 		stage.setTitle("Kiwi");
-		Folders.buildRoot(Config.getOption("path"));
+		
+		List<String> paths = Config.getLibraries().stream().filter(e -> e.getValue().getAsBoolean()).map(e -> e.getKey()).collect(Collectors.toList());
+		visiblePaths = new HashMap<>();
+		Config.getLibraries().forEach(e -> {
+			visiblePaths.put(e.getKey(), e.getValue().getAsBoolean());
+		});
+		
+		Folders.mergeRoot(paths);
 
+		flowPane.getChildren().clear();
 		folderQueue = new LinkedBlockingQueue<Folder>();
 
 		menuAnimation = new TranslateTransition(Duration.millis(250), menu);
@@ -282,7 +294,7 @@ public class KiwiExplorerPane extends AnchorPane{
 	}
 
 	private void updateChild(FolderPanel child) {
-		if (searchBox.accept(child, collapseCheck.isSelected())) {
+		if (searchBox.accept(child, collapseCheck.isSelected(), visiblePaths)) {
 			child.setHidden(false);
 
 			Thumbnails.requestExpress(child.folder);
@@ -361,18 +373,25 @@ public class KiwiExplorerPane extends AnchorPane{
 
 	private void resetLibraries() {
 		for (Iterator<Node> iterator = libraryMenu.getChildren().iterator(); iterator.hasNext();) {
-			Label label = (Label) (iterator.next());
-			if (label.getText().contains("/")) {
+			Node node = iterator.next();
+			
+			if (node instanceof CheckBox) {
 				iterator.remove();
 			}
 		}
 		Config.getLibraries().forEach((entry) -> {
-			Label name = new Label(entry.getKey());
-			name.getStyleClass().add("sub-menu-item");
-			name.setOnMouseClicked((event) -> {
-				selectLibrary(entry.getKey());
+			CheckBox box = new CheckBox(entry.getKey());
+			box.getStyleClass().add("sub-menu-item");
+			box.setSelected(Config.getLibrary(entry.getKey()));
+			box.setOnAction(e -> {
+				e.consume();
 			});
-			libraryMenu.getChildren().add(0, name);
+			box.selectedProperty().addListener((obs, oldval, newVal ) -> {
+				Config.setLibrary(box.getText(),newVal);
+				visiblePaths.put(box.getText(),newVal);
+				updateView();
+			});
+			libraryMenu.getChildren().add(0, box);
 		});
 	}
 

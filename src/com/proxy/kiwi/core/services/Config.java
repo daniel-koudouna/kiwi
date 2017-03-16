@@ -324,6 +324,9 @@ public class Config {
 		return config.getAsJsonObject("libraries").entrySet();
 	}
 
+
+
+	
 	public static void addLibrary(String path) {
 		Gson gson = new Gson();
 		JsonElement el = gson.fromJson("false", JsonElement.class);
@@ -399,6 +402,11 @@ public class Config {
 		return tags;
 	}
 
+	public static void setLibrary(String text, Boolean newVal) {
+		JsonObject libraries = config.getAsJsonObject("libraries");
+		libraries.add(text, new JsonPrimitive(newVal));
+	}
+	
 	public static void setTags(Folder folder, Set<String> tags) {
 		Gson gson = new Gson();
 		checkFolderExists(folder.getName());
@@ -595,4 +603,9 @@ public class Config {
 		}
 		return arr;
 	}
+
+	public static boolean getLibrary(String key) {
+		return config.getAsJsonObject("libraries").get(key).getAsBoolean();
+	}
+
 }
