@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-	<project name="kiwi-reader" default="do-deploy" basedir="."
+<project name="kiwi-reader" default="do-deploy" basedir="."
 		xmlns:fx="javafx:com.sun.javafx.tools.ant"
 		xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
@@ -10,18 +10,19 @@
 	<target name="maven-retrieve">
 		<artifact:pom file="pom.xml" id="maven.project"/>
 		<artifact:dependencies fileSetId="maven-ant-tasks.dependency.fileset" type="jar">
-		<pom refid="maven.project"/>
+			<pom refid="maven.project"/>
 		</artifact:dependencies>
 
 	</target>
 
 	<target name="init-fx-tasks">
-        <echo message="Java home is set to ${java.home}"></echo>
+		<echo message="Java home is set to ${java.home}">
+		</echo>
 
 		<path id="fxant">
 			<filelist>
 				<file name="${java.home}\..\lib\ant-javafx.jar"/>
-                <file name="${java.home}\lib\ant-javafx.jar"/>
+				<file name="${java.home}\lib\ant-javafx.jar"/>
 				<file name="${java.home}\lib\jfxrt.jar"/>
 				<file name="${java.home}\lib\ext\jfxrt.jar"/>
 				<file name="${basedir}"/>
@@ -87,9 +88,9 @@
 
 		<!-- Copy over none Java-Files -->
 		<copy todir="build/classes">
-		<fileset dir="project/src">
-			<exclude name="**/*.java"/>
-		</fileset>
+			<fileset dir="project/src">
+				<exclude name="**/*.java"/>
+			</fileset>
 		</copy>
 
 
@@ -123,7 +124,6 @@
 		<fx:application id="fxApplication"
 			name="Kiwi"
 			mainClass="com.proxy.kiwi.app.Kiwi"
-			preloaderClass=""
 			toolkit="fx"
 		/>
 
@@ -134,7 +134,7 @@
 		<fx:jar destfile="dist/kiwi.jar">
 			<fx:application refid="fxApplication"/>
 			<fileset dir="build/classes">
-			<exclude name=".class" />
+				<exclude name=".class" />
 			</fileset>
 			<fx:resources refid="appRes"/>
 
@@ -166,25 +166,32 @@
 			<fx:resources refid="appRes"/>
 		</fx:deploy>
 
-		<antcall target="clean-up"></antcall>
+		<antcall target="clean-up">
+		</antcall>
 
 	</target>
 
-  <target name="clean-up">
+	<target name="clean-up">
 		<mkdir dir="out"/>
 
-		<move todir="out">
+		<move todir="out" failonerror="false">
 			<fileset dir="deploy/bundles">
 				<include name="*.exe"/>
 			</fileset>
 		</move>
 
-		<delete dir="deploy"/>
-		<delete dir="dist"/>
-		<delete dir="externalLibs"/>
-		<delete dir="project"/>
-		<delete dir="projectRefs"/>
-		<delete dir="build" />
-  </target>
+		<delete dir="deploy" failonerror="false" />
+		<delete dir="project" failonerror="false" />
+		<delete dir="projectRefs" failonerror="false" />
+		<delete dir="build" failonerror="false" />
+		<delete dir="externalLibs" failonerror="false" />
+
+	</target>
+
+	<target name="clean">
+		<antcall target="clean-up" />
+		<delete dir="out" failonerror="false"/>
+		<delete dir="dist" failonerror="false" />
+	</target>
 
 </project>

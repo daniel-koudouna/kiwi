@@ -3,14 +3,17 @@ package com.proxy.kiwi.core.services;
 import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Stopwatch;
+import com.proxy.kiwi.explorer.KiwiExplorerPane;
 import com.proxy.kiwi.reader.KiwiReadingPane;
 import javafx.application.Platform;
 import javafx.geometry.Dimension2D;
+import javafx.scene.Parent;
 import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.nio.channels.FileLock;
 
+//TODO modernize
 public class KiwiInstancer extends Instancer {
 
 	private static Stage stage;
@@ -39,22 +42,28 @@ public class KiwiInstancer extends Instancer {
 		Stopwatch.click("Resuming");
 		Platform.runLater(() -> {
 
-			KiwiReadingPane pane = (KiwiReadingPane) stage.getScene().getRoot();
+			Parent parent = stage.getScene().getRoot();
 
 			Dimension2D sizeDim = new Dimension2D(stage.getWidth(), stage.getHeight());
 			Dimension2D posDim = new Dimension2D(stage.getX(), stage.getY());
 
 			boolean wasFull = stage.isFullScreen();
 
-			Folder folder = Folder.fromFile(input);
-			if (folder != null) {
-				folder.load();
-
-				pane.setFolder(folder);
-				pane.changePage(Folders.find(folder, input));
-
+			if (parent instanceof KiwiReadingPane) {			
+				
+				KiwiReadingPane pane = ((KiwiReadingPane)parent);
+				
+				Folder folder = Folder.fromFile(input);
+				if (folder != null) {
+					folder.load();
+	
+					pane.setFolder(folder);
+					pane.changePage(Folders.find(folder, input));
+	
+				}
+			} else if (parent instanceof KiwiExplorerPane) {
+				
 			}
-
 			stage.setWidth(sizeDim.getWidth());
 			stage.setHeight(sizeDim.getHeight());
 

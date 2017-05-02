@@ -1,25 +1,23 @@
 package com.proxy.kiwi.app;
 
-import com.proxy.kiwi.core.services.Config;
-import com.proxy.kiwi.core.services.Instancer;
-import com.proxy.kiwi.core.services.KiwiInstancer;
-import com.proxy.kiwi.core.services.Thumbnails;
-import com.proxy.kiwi.core.utils.Log;
-import com.proxy.kiwi.core.utils.Resources;
-import com.proxy.kiwi.core.utils.Stopwatch;
-
-import javafx.application.Application;
-import javafx.application.Platform;
-import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.text.Font;
-import javafx.stage.Stage;
-
-import java.awt.*;
-import java.io.File;
 import java.io.IOException;
 import java.nio.channels.OverlappingFileLockException;
 
 import org.apache.tools.ant.util.JavaEnvUtils;
+
+import com.proxy.kiwi.core.services.Config;
+import com.proxy.kiwi.core.services.Instancer;
+import com.proxy.kiwi.core.services.KiwiInstancer;
+import com.proxy.kiwi.core.services.Thumbnails;
+import com.proxy.kiwi.core.utils.Resources;
+import com.proxy.kiwi.core.utils.Stopwatch;
+
+import dorkbox.systemTray.MenuItem;
+import dorkbox.systemTray.SystemTray;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
 
 public abstract class KiwiApplication extends Application {
 
@@ -68,62 +66,36 @@ public abstract class KiwiApplication extends Application {
 	}
 
 	public static void addTrayIcon(Stage stage) {
-		try {
-			SystemTray tray = SystemTray.getSystemTray();
-
-			if (tray.getTrayIcons().length == 0) {
-				javafx.scene.image.Image IMG = new javafx.scene.image.Image(
-						Resources.get("kiwi_small.png").openStream());
-
-				Image img = SwingFXUtils.fromFXImage(IMG, null);
-
-				int trayIconWidth = new TrayIcon(img).getSize().width;
-
-				TrayIcon icon = new TrayIcon(img.getScaledInstance(trayIconWidth, -1, Image.SCALE_SMOOTH));
-				icon.addActionListener(event -> {
-					KiwiInstancer instancer = new KiwiInstancer();
-					instancer.resume(Instancer.SELF_WAKE);
-				});
-
-				MenuItem showItem = new MenuItem("Show");
-				showItem.addActionListener(event -> {
-					KiwiInstancer instancer = new KiwiInstancer();
-					instancer.resume(Instancer.SELF_WAKE);
-				});
-
-				MenuItem hideItem = new MenuItem("Hide");
-				hideItem.addActionListener(event -> {
-					Platform.runLater(() -> {
-						stage.hide();
-						exit();
-					});
-				});
-
-				MenuItem exitItem = new MenuItem("Exit");
-				exitItem.addActionListener(event -> {
-					KiwiInstancer instancer = new KiwiInstancer();
-					instancer.shutdown();
-				});
-
-				PopupMenu popup = new PopupMenu();
-
-				popup.add(showItem);
-				popup.add(hideItem);
-				popup.add(exitItem);
-
-				File fontFile = Resources.getFile("fonts/Ubuntu-L.ttf", "font");
-
-				popup.setFont(java.awt.Font.createFont(java.awt.Font.TRUETYPE_FONT, fontFile).deriveFont(16f));
-
-				icon.setPopupMenu(popup);
-
-				tray.add(icon);
-			}
-
-		} catch (Exception e) {
-			Log.print(e);
+		SystemTray tray = SystemTray.get();
+		
+		if (tray == null) {
+			return;
 		}
+		
+		tray.setTooltip("Kiwi");
+		tray.setImage(Resources.get("kiwi_small.png"));
 
+		tray.getMenu().setCallback( (e) -> {
+			KiwiInstancer instancer = new KiwiInstancer();
+			instancer.resume(Instancer.SELF_WAKE);
+		});
+		
+		tray.getMenu().add(new MenuItem("Show", (e)-> {
+			KiwiInstancer instancer = new KiwiInstancer();
+			instancer.resume(Instancer.SELF_WAKE);
+		}));
+
+		tray.getMenu().add(new MenuItem("Hide" , (e) -> {
+			Platform.runLater(() -> {
+				stage.hide();
+				exit();
+			});			
+		}));
+
+		tray.getMenu().add(new MenuItem("Exit", (e) -> {
+			KiwiInstancer instancer = new KiwiInstancer();
+			instancer.shutdown();			
+		}));
 	}
 
 	public static void startReader(String file) {

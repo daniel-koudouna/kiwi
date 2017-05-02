@@ -16,6 +16,7 @@ import com.proxy.kiwi.core.services.Thumbnails;
 import com.proxy.kiwi.core.utils.Resources;
 import com.proxy.kiwi.core.utils.Stopwatch;
 
+import dorkbox.systemTray.SystemTray;
 import javafx.animation.TranslateTransition;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -155,6 +156,8 @@ public class KiwiExplorerPane extends AnchorPane{
 		});
 
 		scrollSpeed = Config.getIntOption("item_height") / 3.0;
+		
+		SystemTray.get().setStatus("Kiwi Explorer Pane");
 	}
 
 	public void toggleSubmenu(Pane submenu) {

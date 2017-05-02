@@ -23,6 +23,7 @@ import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Resources;
 import com.proxy.kiwi.core.utils.Stopwatch;
 
+import dorkbox.systemTray.SystemTray;
 import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -169,8 +170,12 @@ public class KiwiReadingPane extends StackPane{
 						}
 					}
 				});
+				
+				SystemTray.get().setStatus("Kiwi Reader - " + folder.getName());
 			});
 		});
+		
+
 	}
 
 	@FXML
@@ -264,6 +269,8 @@ public class KiwiReadingPane extends StackPane{
 
 		
 		setChapters();
+		
+		SystemTray.get().setStatus("Kiwi Reader - " + folder.getName());
 	}
 
 	public void loadImage() {
