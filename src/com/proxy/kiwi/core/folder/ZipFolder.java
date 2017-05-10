@@ -52,7 +52,7 @@ public class ZipFolder extends Folder {
 				File entryDestination = new File(outputDir, entry.getName());
 				if (entry.isDirectory()) {
 					entryDestination.mkdirs();
-				} else {
+				} else if (Type.getType(entry) == Type.IMAGE){
 					entryDestination.getParentFile().mkdirs();
 
 					InputStream in = zipFile.getInputStream(entry);
@@ -65,6 +65,7 @@ public class ZipFolder extends Folder {
 
 				}
 			}
+			hasLoaded = true;
 			zipFile.close();
 		} catch (IOException e) {
 
@@ -88,6 +89,7 @@ class UnzipRunner implements Runnable {
 	UnzipRunner(ZipFolder folder, Folder target) {
 		this.folder = folder;
 		this.target = target;
+		System.out.println("STARTING");
 	}
 
 	@Override
@@ -120,6 +122,7 @@ class UnzipRunner implements Runnable {
 
 				}
 			}
+			System.out.println("DONE");
 			zipFile.close();
 		} catch (IOException e) {
 

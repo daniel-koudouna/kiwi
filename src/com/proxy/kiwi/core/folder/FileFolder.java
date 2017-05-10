@@ -3,6 +3,8 @@ package com.proxy.kiwi.core.folder;
 import java.io.File;
 import java.util.Arrays;
 
+import com.proxy.kiwi.core.v2.folder.FileComparators;
+
 public class FileFolder extends Folder {
 
 	public FileFolder(String name, String path, Folder parent) {

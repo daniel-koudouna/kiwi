@@ -8,6 +8,7 @@ import java.util.Iterator;
 
 import com.proxy.kiwi.core.services.Config;
 import com.proxy.kiwi.core.utils.Log;
+import com.proxy.kiwi.core.v2.folder.FileComparators;
 
 import javafx.application.Platform;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -64,7 +65,7 @@ public abstract class Folder {
 //						addFolder(new RarFolder(child.getName(), child.getPath(), this));
 						break;
 					case ZIP:
-//						addFolder(new ZipFolder(child.getName(), child.getPath(), this));
+						addFolder(new ZipFolder(child.getName(), child.getPath(), this));
 						break;
 					case IMAGE:
 						containsImages = true;
