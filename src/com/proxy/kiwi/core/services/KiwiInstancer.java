@@ -3,6 +3,8 @@ package com.proxy.kiwi.core.services;
 import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Stopwatch;
+import com.proxy.kiwi.core.v2.folder.FolderV2;
+import com.proxy.kiwi.core.v2.folder.FoldersV2;
 import com.proxy.kiwi.explorer.KiwiExplorerPane;
 import com.proxy.kiwi.reader.KiwiReadingPane;
 import javafx.application.Platform;
@@ -10,8 +12,10 @@ import javafx.geometry.Dimension2D;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.channels.FileLock;
+import java.util.Optional;
 
 //TODO modernize
 public class KiwiInstancer extends Instancer {
@@ -53,14 +57,11 @@ public class KiwiInstancer extends Instancer {
 				
 				KiwiReadingPane pane = ((KiwiReadingPane)parent);
 				
-				Folder folder = Folder.fromFile(input);
-				if (folder != null) {
-					folder.load();
-	
+				FolderV2.fromFile(new File(input)).ifPresent( folder -> {
 					pane.setFolder(folder);
-					pane.changePage(Folders.find(folder, input));
-	
-				}
+					pane.changePage(folder.find(input));
+					
+				});
 			} else if (parent instanceof KiwiExplorerPane) {
 				
 			}

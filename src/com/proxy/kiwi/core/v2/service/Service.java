@@ -47,6 +47,10 @@ public abstract class Service extends Thread{
  		}
 	}
 
+	public static boolean isRunning(Class<? extends Service> service) {
+		return activeServices.stream().anyMatch(s -> s.getClass().equals(service));
+	}
+	
 	/**
 	 * Stops a number of services. Services not started are unaffected.
 	 * @param services The classes of all the services to be stopped.

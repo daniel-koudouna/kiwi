@@ -4,7 +4,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.CompletableFuture;
 
 import javax.imageio.ImageIO;
 
@@ -13,15 +12,14 @@ import org.imgscalr.Scalr.Method;
 import org.imgscalr.Scalr.Mode;
 
 import com.proxy.kiwi.app.KiwiApplication;
-import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.image.KiwiImage;
 import com.proxy.kiwi.core.image.Orientation;
 import com.proxy.kiwi.core.services.Config;
-import com.proxy.kiwi.core.services.Folders;
 import com.proxy.kiwi.core.utils.FXTools;
 import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Resources;
 import com.proxy.kiwi.core.utils.Stopwatch;
+import com.proxy.kiwi.core.v2.folder.FolderV2;
 
 import dorkbox.systemTray.SystemTray;
 import javafx.application.Platform;
@@ -46,18 +44,18 @@ import javafx.scene.transform.Translate;
 import javafx.stage.Stage;
 
 public class KiwiReadingPane extends StackPane{
-	
+
 	static final String FXML_FILE = "reading_pane.fxml";
-	
+
 	@FXML private ImageView view;
 	@FXML private Label pagenum;
 	@FXML private VBox chapters;
 	@FXML private Group group;
-	
+
 	private Rotate rotate;
 	private Translate translate;
 
-	private volatile Folder folder;
+	private volatile FolderV2 folder;
 	private KiwiImage image;
 	private WritableImage fullImage;
 
@@ -77,7 +75,7 @@ public class KiwiReadingPane extends StackPane{
 
 	private SimpleStringProperty titleProperty = new SimpleStringProperty();
 	private SimpleStringProperty folderNameProperty = new SimpleStringProperty();
-	
+
 	// TODO move constants to separate place?
 	private static final double ZOOM_RATIO_INCREMENT = 0.2, TRANSLATE_Y_RATE = 400;
 
@@ -87,24 +85,18 @@ public class KiwiReadingPane extends StackPane{
 
 		resamplingMethod = Method.QUALITY;
 
-		CompletableFuture<Void> folderInit = CompletableFuture.runAsync(() -> {
 
-			stage.setWidth(Config.getIntOption("width"));
-			stage.setHeight(Config.getIntOption("height"));
+		stage.setWidth(Config.getIntOption("width"));
+		stage.setHeight(Config.getIntOption("height"));
 
-			folder = Folder.fromFile(path);
 
-			folder.load();
+		folder = FolderV2.fromFile(new File(path)).orElseThrow(NullPointerException::new);
+		folder.load();
 
-			
-			
-			titleProperty.bind(new SimpleStringProperty("Kiwi - ").concat(folderNameProperty)
-					.concat(" - ").concat(pageProperty.asString()));
-			
-			stage.titleProperty().bind(titleProperty);
+		titleProperty.bind(new SimpleStringProperty("Kiwi - ").concat(folderNameProperty)
+				.concat(" - ").concat(pageProperty.asString()));
 
-			pageNumber = Folders.find(folder, path);
-		});
+		stage.titleProperty().bind(titleProperty);
 
 		loadLayout();
 
@@ -120,62 +112,65 @@ public class KiwiReadingPane extends StackPane{
 		view.setSmooth(false);
 
 
-		CompletableFuture.allOf(folderInit).thenRun(() -> {
-			Platform.runLater(() -> {
-				pageProperty.set(pageNumber);
 
-				pagenum.textProperty().bind(pageProperty.asString()
-						.concat(new SimpleStringProperty("/").concat(folder.getSizeProperty().asString())));
+		pageNumber = folder.find(path);
 
-				folderNameProperty.set(folder.getName());
-				changePage(pageNumber);
-				setChapters();
+		pageProperty.set(pageNumber);
 
-				ResizeListener listener = new ResizeListener(100) {
 
-					@Override
-					public void onResizeStart() {
-						view.setImage(image);
-					}
+		pagenum.textProperty().bind(pageProperty.asString()
+				.concat(new SimpleStringProperty("/").concat(folder.imageSize())));
 
-					@Override
-					public void onResizeEnd() {
-						loadImage();
-					}
+		folderNameProperty.set(folder.getName());
+		changePage(pageNumber);
+		setChapters();
 
-				};
+		Platform.runLater( () -> {
+			ResizeListener listener = new ResizeListener(100) {
 
-				this.widthProperty().addListener(listener);
-				this.heightProperty().addListener(listener);
+				@Override
+				public void onResizeStart() {
+					view.setImage(image);
+				}
 
-				stage.getScene().setOnDragOver(event -> {
-					Dragboard db = event.getDragboard();
-					if (db.hasFiles()) {
-						event.acceptTransferModes(TransferMode.MOVE);
-					} else {
-						event.consume();
-					}
-				});
+				@Override
+				public void onResizeEnd() {
+					loadImage();
+				}
 
-				stage.getScene().setOnDragDropped(event -> {
-					Dragboard db = event.getDragboard();
-					if (db.hasFiles()) {
-						File file = db.getFiles().get(0);
-						Folder folder = Folder.fromFile(file);
-						if (folder.equals(this.folder)) {
-							changePage(folder.find(file.getAbsolutePath()));
-						} else {
-							setFolder(folder);
-							changePage(folder.find(file.getAbsolutePath()));
-						}
-					}
-				});
-				
-				SystemTray.get().setStatus("Kiwi Reader - " + folder.getName());
+			};
+
+			this.widthProperty().addListener(listener);
+			this.heightProperty().addListener(listener);
+
+			stage.getScene().setOnDragOver(event -> {
+				Dragboard db = event.getDragboard();
+				if (db.hasFiles()) {
+					event.acceptTransferModes(TransferMode.MOVE);
+				} else {
+					event.consume();
+				}
 			});
-		});
-		
 
+			stage.getScene().setOnDragDropped(event -> {
+				Dragboard db = event.getDragboard();
+				if (db.hasFiles()) {
+					File file = db.getFiles().get(0);
+
+					if (folder.contains(file)) {
+						changePage(folder.find(file.getAbsolutePath()));
+					} else {
+						FolderV2 folder = FolderV2.fromFile(file).orElseThrow(NullPointerException::new);
+						setFolder(folder);
+						folder.load();
+						changePage(folder.find(file.getAbsolutePath()));								
+					}
+				}
+			});
+
+		});
+
+		SystemTray.get().setStatus("Kiwi Reader - " + folder.getName());
 	}
 
 	@FXML
@@ -188,17 +183,20 @@ public class KiwiReadingPane extends StackPane{
 			changePage(pageProperty.get() + 1);
 			break;
 		case NEXT_FOLDER:
-			Folder next = folder.next();
-			Log.print(Log.EVENT, "Switching folder to " + next.getName());
-
-			setFolder(next);
-			changePage(1);
+			folder.next().ifPresent( next -> {
+				Log.print(Log.EVENT, "Switching folder to " + next.getName());
+				next.load();
+				setFolder(next);
+				changePage(1);				
+			});;
 			break;
 		case PREVIOUS_FOLDER:
-			Folder previous = folder.previous();
-			Log.print(Log.EVENT, "Switching folder to " + previous.getName());
-			setFolder(previous);
-			changePage(1);
+			folder.previous().ifPresent(previous -> {
+				Log.print(Log.EVENT, "Switching folder to " + previous.getName());
+				previous.load();
+				setFolder(previous);
+				changePage(1);				
+			});;
 			break;
 		case CHAPTER_NEXT:
 			if (Config.getChapters(folder.getName()) != null) {
@@ -255,21 +253,24 @@ public class KiwiReadingPane extends StackPane{
 		return pageProperty;
 	}
 
-	public Folder getFolder() {
+	public FolderV2 getFolder() {
 		return folder;
 	}
 
-	public void setFolder(Folder folder) {
+	public void setFolder(FolderV2 folder) {
 		this.folder = folder;
 
 		folderNameProperty.set(folder.getName());
-		
-		pagenum.textProperty().bind(pageProperty.asString()
-				.concat(new SimpleStringProperty("/").concat(folder.getSizeProperty().asString())));
 
-		
+		folder.getLoaded().onChange( (oldVal, newVal) -> {
+			Platform.runLater( () -> {
+				pagenum.textProperty().bind(pageProperty.asString()
+						.concat(new SimpleStringProperty("/").concat(folder.imageSize())));				
+			});
+		});		
+
 		setChapters();
-		
+
 		SystemTray.get().setStatus("Kiwi Reader - " + folder.getName());
 	}
 
@@ -280,7 +281,7 @@ public class KiwiReadingPane extends StackPane{
 
 		int page = pageProperty.get();
 
-		File file = folder.getVolumes().get(page - 1).getFile();
+		File file = folder.getImages().get(page - 1).getFile();
 
 		try {
 			// FIXME add .jpg compatibility
@@ -304,7 +305,7 @@ public class KiwiReadingPane extends StackPane{
 	}
 
 	public void changePage(int page) {
-		if (page <= 0 || page > folder.getVolumes().size() || isChangingPage) {
+		if (page <= 0 || page > folder.imageSize() || isChangingPage) {
 			return;
 		}
 		Stopwatch.click("Changing page");
@@ -313,7 +314,7 @@ public class KiwiReadingPane extends StackPane{
 
 			this.pageProperty.set(page);
 
-			File file = folder.getVolumes().get(page - 1).getFile();
+			File file = folder.getImages().get(page - 1).getFile();
 
 			image = null;
 			System.gc();
@@ -337,7 +338,7 @@ public class KiwiReadingPane extends StackPane{
 			if (resamplingMethod != Method.SPEED) {
 				loadImage();				
 			} else {
-				 view.setImage(image);			
+				view.setImage(image);			
 			}
 
 			Stopwatch.click("Loading Image");			
@@ -398,7 +399,7 @@ public class KiwiReadingPane extends StackPane{
 	private void loadLayout() {
 
 		Object self = this;
-		
+
 		FXTools.runAndWait( () -> {
 			Stopwatch.click("Loading Layout");
 			FXMLLoader loader = new FXMLLoader(Resources.get(FXML_FILE));

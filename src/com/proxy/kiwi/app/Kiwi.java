@@ -4,6 +4,8 @@ import com.proxy.kiwi.core.services.Config;
 import com.proxy.kiwi.core.services.KiwiInstancer;
 import com.proxy.kiwi.core.utils.Resources;
 import com.proxy.kiwi.core.utils.Stopwatch;
+import com.proxy.kiwi.core.v2.service.GenericTaskService;
+import com.proxy.kiwi.core.v2.service.Service;
 import com.proxy.kiwi.explorer.KiwiExplorerPane;
 import com.proxy.kiwi.reader.KiwiReadingPane;
 import javafx.scene.Scene;
@@ -16,6 +18,9 @@ import java.util.List;
 public class Kiwi extends KiwiApplication {
 
 	public static void main(String[] args) {
+		
+		Service.init(GenericTaskService.class);
+		
 		if (args.length != 0) {
 			KiwiInstancer instancer = new KiwiInstancer();
 

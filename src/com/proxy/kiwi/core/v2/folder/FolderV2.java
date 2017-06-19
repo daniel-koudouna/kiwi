@@ -1,17 +1,16 @@
 package com.proxy.kiwi.core.v2.folder;
 
 import java.io.File;
+import java.security.GeneralSecurityException;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import com.proxy.kiwi.core.folder.Folder;
-import com.proxy.kiwi.core.folder.Volume;
 import com.proxy.kiwi.core.utils.Dynamic;
 import com.proxy.kiwi.core.v2.service.GenericTaskService;
+import com.proxy.kiwi.core.v2.service.Service;
 
 /**
  * A Tree-like data structure which acts as an abstraction for the files and images stored in various
@@ -42,8 +41,9 @@ public abstract class FolderV2 extends Item{
 	 * @param file The file which contains the children
 	 * @param name The internal name of the folder
 	 * @param parent The parent of the folder, or null if the folder is a root node
+	 * @param autoLoad Whether or not to automatically queue image loading
 	 */
-	public FolderV2(File file, String name, FolderV2 parent) {
+	public FolderV2(File file, String name, FolderV2 parent, boolean autoLoad) {
 		super(file,name,parent);
 		hasLoaded = new Dynamic<Boolean>(false);
 		children = Optional.empty();
@@ -51,18 +51,29 @@ public abstract class FolderV2 extends Item{
 		this.parent = Optional.ofNullable(parent);
 
 		loadChildren();
-
-		GenericTaskService.enqueue(this::loadImagesInternal);
+		
+		if (autoLoad) {
+			GenericTaskService.enqueue(this::loadImagesInternal);
+		}
+		
 	}
 
+	public void load() {
+		loadImagesInternal();
+	}
+	
+	public FolderV2(File file, String name, FolderV2 parent) {
+		this(file,name,parent,false);
+	}
+	
 	public long folderSize() {
 		return folderStream().count();
 	}
-	
+
 	public long imageSize() {
 		return imageStream().count();
 	}
-	
+
 	public Stream<FolderV2> folderStream() {
 		if (children.isPresent()) {
 			return children.get().stream();
@@ -83,6 +94,9 @@ public abstract class FolderV2 extends Item{
 		return Stream.concat(folderStream(), imageStream());
 	}
 
+	public List<FolderImage> getImages() {
+		return images.orElse(new LinkedList<>());
+	}
 
 	public void refactor() {
 		//pull children up
@@ -114,17 +128,28 @@ public abstract class FolderV2 extends Item{
 	public boolean hasAncestor(FolderV2 parent) {
 		return (this.parent.isPresent() && (this.parent.get().equals(parent) || this.parent.get().hasAncestor(parent)));
 	}
-	
+
 	public boolean hasAncestor(String name) {
 		return (this.parent.isPresent() && (this.parent.get().getName().toLowerCase().contains(name) || this.parent.get().hasAncestor(name)));
 	}
-	
+
+	public static Optional<FolderV2> fromFile(File file) {
+		Optional<Item> item = getFrom(file,null);
+		if (item.isPresent() && item.get() instanceof FolderV2) {
+			return Optional.of((FolderV2) item.get());
+		} else if (item.isPresent()) {
+			return fromFile(file.getParentFile());
+		} else {
+			return Optional.empty();
+		}
+	}
+
 	public int find(String absolutePath) {
 
 		if (!images.isPresent()) {
 			return 1;
 		}
-		
+
 		for (int i = 0; i < images.get().size(); i++) {
 			FolderImage img = images.get().get(i);
 			if (img.getFile().getAbsolutePath().equals(absolutePath)) {
@@ -134,17 +159,74 @@ public abstract class FolderV2 extends Item{
 
 		return 1;
 	}
+
+	public Optional<FolderV2> next() {
+		Optional<FolderV2> parent = FolderV2.fromFile(file.getParentFile());
+		if (!parent.isPresent()) {
+			return Optional.empty();
+		}
+		
+		List<FolderV2> subFolders = parent.get().children.orElse(Collections.emptyList());
+		
+		boolean found = false;
+		for (FolderV2 child : subFolders) {
+			if (found) {
+				return Optional.of(child);
+			}
+
+			if (child.getFile().getAbsolutePath().equals(this.getFile().getAbsolutePath())) {
+				found = true;
+			}
+		}
+		
+		return Optional.empty();
+	}
 	
-	private void loadImagesInternal() {
-		this.loadImages();
-		this.hasLoaded.set(true);
+	public Optional<FolderV2> previous() {
+		Optional<FolderV2> parent = FolderV2.fromFile(file.getParentFile());
+		if (!parent.isPresent()) {
+			return Optional.empty();
+		}
+		
+		List<FolderV2> subFolders = parent.get().children.orElse(Collections.emptyList());
+		
+		FolderV2 prev = null;
+		for (FolderV2 child : subFolders) {
+			if (child.getFile().getAbsolutePath().equals(this.getFile().getAbsolutePath())) {
+				if (prev != null) {
+					return Optional.of(prev);
+				}
+			}
+			prev = child;
+		}
+		
+		return Optional.empty();
+	}
+	
+	public Dynamic<Boolean> getLoaded() {
+		return hasLoaded;
+	}
+
+	public boolean contains(File file) {
+		return images.orElse(Collections.emptyList()).stream().anyMatch(image -> image.file.getAbsolutePath().equals(file.getAbsolutePath()));
 	}
 	
 	protected abstract void loadChildren();
 
 	protected abstract void loadImages();
 
+
 	protected Optional<Item> getItem(File file) {
-		return Item.from(file, this);
+		return getFrom(file,this);
 	}
+
+	private void loadImagesInternal() {
+		this.loadImages();
+		this.hasLoaded.set(true);
+	}
+
+	private static Optional<Item> getFrom(File file, FolderV2 parent) {
+		return Item.from(file, parent);
+	}
+
 }
