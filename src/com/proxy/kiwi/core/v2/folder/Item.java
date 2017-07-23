@@ -36,14 +36,14 @@ public abstract class Item {
 	}
 
 	
-	public static Optional<Item> from(File file, FolderV2 parent) {
+	public static Optional<Item> from(File file, FolderV2 parent, File initial) {
 		switch (ItemType.get(file)) {
 		case FOLDER:
-			return Optional.of(new FileFolderV2(file, file.getName(), parent));
+			return Optional.of(new FileFolderV2(file, file.getName(), parent, initial));
 		case IMAGE:
 			return Optional.of(new FolderImage(file,file.getName(),parent));
 		case ZIP:
-			return Optional.of(new ZipFolderV2(file, file.getName(), parent));
+			return Optional.of(new ZipFolderV2(file, file.getName(), parent, initial));
 		case SZ:
 		case TAR:
 		case UNKNOWN:

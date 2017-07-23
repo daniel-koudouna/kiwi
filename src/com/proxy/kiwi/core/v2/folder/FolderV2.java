@@ -1,16 +1,26 @@
 package com.proxy.kiwi.core.v2.folder;
 
 import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.stream.Stream;
 
 import com.proxy.kiwi.core.utils.Dynamic;
 import com.proxy.kiwi.core.v2.service.GenericTaskService;
 import com.proxy.kiwi.core.v2.service.Service;
+
+import ch.qos.logback.core.net.SyslogOutputStream;
 
 /**
  * A Tree-like data structure which acts as an abstraction for the files and images stored in various
@@ -34,6 +44,9 @@ public abstract class FolderV2 extends Item{
 
 	Dynamic<Boolean> hasLoaded;
 
+	int startPage = 1;
+	protected File initial;
+	
 	/**
 	 * Folders use a two-pass system to improve speed. A folder does enough work only to create the other nodes in the tree, but defers
 	 * loading of the images, which are usually much more numerous than the folders, to the {@link GenericTaskService}.
@@ -43,12 +56,13 @@ public abstract class FolderV2 extends Item{
 	 * @param parent The parent of the folder, or null if the folder is a root node
 	 * @param autoLoad Whether or not to automatically queue image loading
 	 */
-	public FolderV2(File file, String name, FolderV2 parent, boolean autoLoad) {
+	public FolderV2(File file, String name, FolderV2 parent, File initial, boolean autoLoad) {
 		super(file,name,parent);
 		hasLoaded = new Dynamic<Boolean>(false);
 		children = Optional.empty();
 		images = Optional.empty();
 		this.parent = Optional.ofNullable(parent);
+		this.initial = initial;
 
 		loadChildren();
 		
@@ -62,8 +76,8 @@ public abstract class FolderV2 extends Item{
 		loadImagesInternal();
 	}
 	
-	public FolderV2(File file, String name, FolderV2 parent) {
-		this(file,name,parent,false);
+	public FolderV2(File file, String name, FolderV2 parent, File initial) {
+		this(file,name,parent,initial,false);
 	}
 	
 	public long folderSize() {
@@ -133,17 +147,49 @@ public abstract class FolderV2 extends Item{
 		return (this.parent.isPresent() && (this.parent.get().getName().toLowerCase().contains(name) || this.parent.get().hasAncestor(name)));
 	}
 
-	public static Optional<FolderV2> fromFile(File file) {
-		Optional<Item> item = getFrom(file,null);
+	public static Optional<FolderV2> fromFile(String path) {
+		return fromFile(path, true);
+	}
+	
+	public static Optional<FolderV2> fromFile(File file, boolean retry) {
+		return fromFile(file.getAbsolutePath(), retry);
+	}
+	
+	public static Optional<FolderV2> fromFile(String path, boolean retry) {
+		Optional<FolderV2> folder = fromFile(new File(path), new File(path));
+		if (!folder.isPresent() && retry) {
+			folder = fromFileBackup(path);
+		}
+		
+		return folder;
+	}
+	
+	public static Optional<FolderV2> fromFile(File file, File initial) {
+		Optional<Item> item = getFrom(file,null, initial);
 		if (item.isPresent() && item.get() instanceof FolderV2) {
 			return Optional.of((FolderV2) item.get());
 		} else if (item.isPresent()) {
-			return fromFile(file.getParentFile());
+			return fromFile(file.getParentFile(), initial);
 		} else {
 			return Optional.empty();
 		}
 	}
 
+	public int findPartial(String filename) {
+		if (!images.isPresent()) {
+			return 1;
+		}
+		
+		for (int i = 0; i < images.get().size(); i++) {
+			FolderImage img = images.get().get(i);
+			if (img.getFile().getName().equals(filename)) {
+				return i + 1;
+			}
+		}
+		
+		return 1;
+	}
+	
 	public int find(String absolutePath) {
 
 		if (!images.isPresent()) {
@@ -161,7 +207,7 @@ public abstract class FolderV2 extends Item{
 	}
 
 	public Optional<FolderV2> next() {
-		Optional<FolderV2> parent = FolderV2.fromFile(file.getParentFile());
+		Optional<FolderV2> parent = FolderV2.fromFile(file.getParentFile(), true);
 		if (!parent.isPresent()) {
 			return Optional.empty();
 		}
@@ -183,7 +229,7 @@ public abstract class FolderV2 extends Item{
 	}
 	
 	public Optional<FolderV2> previous() {
-		Optional<FolderV2> parent = FolderV2.fromFile(file.getParentFile());
+		Optional<FolderV2> parent = FolderV2.fromFile(file.getParentFile(), true);
 		if (!parent.isPresent()) {
 			return Optional.empty();
 		}
@@ -217,7 +263,7 @@ public abstract class FolderV2 extends Item{
 
 
 	protected Optional<Item> getItem(File file) {
-		return getFrom(file,this);
+		return getFrom(file,this, initial);
 	}
 
 	private void loadImagesInternal() {
@@ -225,8 +271,67 @@ public abstract class FolderV2 extends Item{
 		this.hasLoaded.set(true);
 	}
 
-	private static Optional<Item> getFrom(File file, FolderV2 parent) {
-		return Item.from(file, parent);
+	private static Optional<Item> getFrom(File file, FolderV2 parent, File initial) {
+		return Item.from(file, parent, initial);
+	}
+
+	public static Optional<FolderV2> fromFileBackup(String input) {
+		LinkOption[] lo = new LinkOption[0];
+
+		Path path = Paths.get(input);
+		Stack<String> stack = new Stack<>();
+
+		while (!Files.isDirectory(path, lo)) {
+			stack.push(path.getFileName().toString());
+			path = path.getParent();
+		}
+
+		File cd = path.toFile();
+
+		boolean failed = false;
+		while (!stack.isEmpty() && !failed) {
+			String file = stack.pop();
+			
+			List<File> files = Arrays.asList(cd.listFiles());
+
+			Optional<File> next = files.stream()
+					.filter(f -> {
+						
+						byte[] bytes = file.getBytes(Charset.defaultCharset());
+						String n = new String(bytes, StandardCharsets.US_ASCII);
+
+						String s1 = n;
+						String s2 = f.getName();
+
+						return Arrays.equals(s1.getBytes(), s2.getBytes());
+					})
+					.findFirst();
+
+			if (next.isPresent()) {
+				cd = next.get();
+			} else {
+				failed = true;
+			}
+		}
+
+		if (failed) {
+			return Optional.empty();
+		} else {
+			System.out.println(cd.getAbsolutePath());
+			return FolderV2.fromFile(cd, false);
+		}
+		
+	}
+
+	public int getStartPage() {
+		if (!hasLoaded.get()) {
+			load();
+		}
+		if (!initial.isDirectory()) {
+			return find(initial.getAbsolutePath());
+		} else {
+			return 1;
+		}
 	}
 
 }

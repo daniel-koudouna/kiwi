@@ -83,14 +83,14 @@ public class KiwiReadingPane extends StackPane{
 
 		this.stage = stage;
 
-		resamplingMethod = Method.QUALITY;
+		resamplingMethod = Method.SPEED;
 
 
 		stage.setWidth(Config.getIntOption("width"));
 		stage.setHeight(Config.getIntOption("height"));
 
 
-		folder = FolderV2.fromFile(new File(path)).orElseThrow(NullPointerException::new);
+		folder = FolderV2.fromFile(path).orElseThrow(NullPointerException::new);
 		folder.load();
 
 		titleProperty.bind(new SimpleStringProperty("Kiwi - ").concat(folderNameProperty)
@@ -160,10 +160,10 @@ public class KiwiReadingPane extends StackPane{
 					if (folder.contains(file)) {
 						changePage(folder.find(file.getAbsolutePath()));
 					} else {
-						FolderV2 folder = FolderV2.fromFile(file).orElseThrow(NullPointerException::new);
+						FolderV2 folder = FolderV2.fromFile(file.getAbsolutePath()).orElseThrow(NullPointerException::new);
 						setFolder(folder);
 						folder.load();
-						changePage(folder.find(file.getAbsolutePath()));								
+						changePage(folder.getStartPage());
 					}
 				}
 			});
@@ -269,6 +269,10 @@ public class KiwiReadingPane extends StackPane{
 			});
 		});		
 
+		folder.load();
+		Log.print(Log.IO, "Found folder with " + folder.imageSize() + " images");
+
+		
 		setChapters();
 
 		SystemTray.get().setStatus("Kiwi Reader - " + folder.getName());

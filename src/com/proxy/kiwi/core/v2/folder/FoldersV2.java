@@ -41,10 +41,10 @@ public class FoldersV2 {
 	}
 	
 	public FolderV2 rootFrom(String rootPath, String...paths) {
-		FolderV2 root = new FileFolderV2(new File(rootPath), "root", null);
+		FolderV2 root = new FileFolderV2(new File(rootPath), "root", null, new File(rootPath));
 		
 		for (String path: paths) {
-			FolderV2 folder = new FileFolderV2(new File(path), "xroot", null);
+			FolderV2 folder = new FileFolderV2(new File(path), "xroot", null, new File(path));
 			folder.folderStream().forEach(f -> {
 				f.parent = Optional.of(root);
 				root.children.get().add(f);

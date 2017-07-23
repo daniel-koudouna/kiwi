@@ -19,8 +19,8 @@ public class ZipFolderV2 extends FolderV2{
 
 	File extractDirectory;
 
-	public ZipFolderV2(File file, String name, FolderV2 parent) {
-		super(file, name, parent);
+	public ZipFolderV2(File file, String name, FolderV2 parent, File initial) {
+		super(file, name, parent, initial);
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class ZipFolderV2 extends FolderV2{
 				File entryDestination = new File(extractDirectory, entry.getName());
 				if (entry.isDirectory()) {
 					entryDestination.mkdirs();
-					children.add(new FileFolderV2(entryDestination, entry.getName(), this));
+					children.add(new FileFolderV2(entryDestination, entry.getName(), this, initial));
 				}
 			}
 

@@ -7,8 +7,8 @@ import java.util.Optional;
 
 public class FileFolderV2 extends FolderV2{
 
-	public FileFolderV2(File file, String name, FolderV2 parent) {
-		super(file, name, parent);
+	public FileFolderV2(File file, String name, FolderV2 parent, File initial) {
+		super(file, name, parent, initial);
 	}
 
 	@Override
