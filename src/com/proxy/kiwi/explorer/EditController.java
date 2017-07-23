@@ -47,9 +47,9 @@ public class EditController {
 
 		tagChoice.getItems().addAll(allTags);
 
-		tagChoice.setOnAction((e) -> {
-			addChoiceTag();
-		});
+//		tagChoice.setOnAction((e) -> {
+//			addChoiceTag();
+//		});
 	}
 
 	@FXML

@@ -6,13 +6,13 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
 public enum Log {
-	TIME("TIME"), GUI("GUI ", false), EVENT("EVNT"), IO("I /O"), PRELOAD("LOAD", false), ERR("ERR ");
+	TIME("TIME"), GUI("GUI ", false), EVENT("EVNT"), IO("I /O"), PRELOAD("LOAD"), ERR("ERR ");
 
 	private final String string;
 	private final boolean visible;
 	private static JFrame logwindow;
 	private static TextArea log;
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = System.getenv("KIWI_DEBUG") != null;
 	private static final int MAX_STACK_DEPTH = 10;
 
 	Log(String s) {
