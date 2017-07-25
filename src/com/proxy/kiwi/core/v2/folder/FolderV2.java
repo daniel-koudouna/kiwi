@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -18,9 +17,6 @@ import java.util.stream.Stream;
 
 import com.proxy.kiwi.core.utils.Dynamic;
 import com.proxy.kiwi.core.v2.service.GenericTaskService;
-import com.proxy.kiwi.core.v2.service.Service;
-
-import ch.qos.logback.core.net.SyslogOutputStream;
 
 /**
  * A Tree-like data structure which acts as an abstraction for the files and images stored in various

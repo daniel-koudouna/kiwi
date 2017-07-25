@@ -1,33 +1,19 @@
 package com.proxy.kiwi.core.services;
 
-import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Stopwatch;
 import com.proxy.kiwi.core.v2.folder.FolderV2;
-import com.proxy.kiwi.core.v2.folder.FoldersV2;
 import com.proxy.kiwi.explorer.KiwiExplorerPane;
 import com.proxy.kiwi.reader.KiwiReadingPane;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
 import javafx.application.Platform;
 import javafx.geometry.Dimension2D;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
 
-import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.nio.channels.FileLock;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
-import java.util.Stack;
 
 //TODO modernize
 public class KiwiInstancer extends Instancer {

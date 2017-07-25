@@ -1,6 +1,7 @@
 ;This file will be executed next to the application bundle image
 ;I.e. current directory will contain folder Kiwi with application files
 #define name "Kiwi"
+#define res "src\com\proxy\kiwi\res"
 
 [Setup]
 AlwaysShowComponentsList=Yes
@@ -32,11 +33,11 @@ OutputBaseFilename="{#name}-setup"
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=admin
-SetupIconFile=package\windows\Kiwi.ico
+SetupIconFile={#res}\Kiwi.ico
 UninstallDisplayIcon={app}\Kiwi.ico
 UninstallDisplayName=Kiwi
 WizardImageStretch=No
-WizardSmallImageFile=package\windows\Kiwi-setup-icon.bmp   
+WizardSmallImageFile={#res}\Kiwi-setup-icon.bmp   
 ArchitecturesInstallIn64BitMode=x64
 
 [Tasks]
@@ -67,7 +68,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "dist\kiwi.exe"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program;
-Source: "package\windows\Kiwi.ico"; DestDir: "{app}"; Components: program;
+Source: "{#res}\Kiwi.ico"; DestDir: "{app}"; Components: program;
 
 [Icons]
 Name: "{group}\Kiwi"; Filename: "{app}\Kiwi.exe"; IconFilename: "{app}\Kiwi.ico"; Components: group;
