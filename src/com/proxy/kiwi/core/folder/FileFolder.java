@@ -1,49 +1,68 @@
 package com.proxy.kiwi.core.folder;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
-import com.proxy.kiwi.core.v2.folder.FileComparators;
+public class FileFolder extends Folder{
 
-public class FileFolder extends Folder {
-
-	public FileFolder(String name, String path, Folder parent) {
-		super(name, path, parent);
+	public FileFolder(File file, String name, Folder parent, File initial) {
+		super(file, name, parent, initial);
 	}
 
 	@Override
-	public void load() {
+	protected void loadChildren() {
+		File[] entries = file.listFiles();
+		if (entries == null || entries.length == 0) {
+			return;
+		}
+		
+		List<Folder> items = new ArrayList<>(entries.length);
 
-		isLoaded.set(true);
+		
+		for (File entry : entries) {
+			ItemType type = ItemType.get(entry);
+			if (type == ItemType.IMAGE) {
+				break;
+			}
+			
+			getItem(entry).ifPresent(item  -> {
+				if (item instanceof Folder) {
+					items.add((Folder) item);
+				}
+			});
+		}
+		
+		this.children = Optional.of(items);
+	}
 
-		if (hasZipFolderParent()) {
-			getZipParent().load(this);
-		} else if (hasRarFolderParent()) {
-			getRarParent().load(this);
-		} else {
-			File file = new File(getFilenameProperty().get());
-			File[] files = file.listFiles();
-			Arrays.sort(files,FileComparators.WINDOWS_LIKE);
-			getVolumes().clear();
-			for (File child : files) {
-				if (Type.getType(child) == Type.IMAGE) {
-					addVolume(new Volume(child.getName(), child.getPath(), this));
+	@Override
+	protected void loadImagesImpl(boolean partial) {
+		File[] entries = file.listFiles();
+		if (entries == null || entries.length == 0) {
+			return;
+		}
+		
+		List<FolderImage> items = new ArrayList<>(entries.length);
+
+		
+		for (File entry : entries) {
+			ItemType type = ItemType.get(entry);
+			if (type != ItemType.IMAGE) {
+				continue;
+			}
+			
+			Item image = getItem(entry).get();
+			if (image != null && image instanceof FolderImage) {
+				items.add((FolderImage) image);
+				if (partial) {
+					break;					
 				}
 			}
 		}
-
-	}
-
-	@Override
-	protected File[] build() {
-		File file = new File(filename.get());
-		return file.listFiles();
-	}
-
-	@Override
-	protected String filterName(String name) {
-		return name.replaceAll("(\\(.*?\\))|(\\[.*?\\])|(\\{.*?\\})|(=.*?=)|(~.*?~)", "").replaceAll("\\A\\s*", "")
-				.trim();
+		
+		this.images = Optional.of(items);
 	}
 
 }

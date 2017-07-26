@@ -5,6 +5,7 @@ import com.proxy.kiwi.core.image.Cache;
 import com.proxy.kiwi.core.image.KiwiImage;
 import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Resources;
+
 import javafx.application.Platform;
 import javafx.scene.image.Image;
 
@@ -77,9 +78,7 @@ public class Thumbnails {
 
 	public static void requestExpressOverwrite(Folder folder) {
 		expressQueue.clear();
-		for (Folder child : folder.getSubfolders()) {
-			expressQueue.add(child);
-		}
+		folder.children().forEach(expressQueue::add);
 	}
 }
 
@@ -105,7 +104,7 @@ class ThumbnailThread extends Thread {
 	}
 
 	public void process(Folder folder, boolean backgroundLoad) {
-		String filename = folder.getImagePath();
+		String filename = Config.getFolderImage(folder);
 
 		if (filename != null && !Thumbnails.getCache().contains(filename)) {
 

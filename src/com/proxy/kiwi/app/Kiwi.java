@@ -1,11 +1,11 @@
 package com.proxy.kiwi.app;
 
+import com.proxy.kiwi.core.service.GenericTaskService;
+import com.proxy.kiwi.core.service.Service;
 import com.proxy.kiwi.core.services.Config;
 import com.proxy.kiwi.core.services.KiwiInstancer;
 import com.proxy.kiwi.core.utils.Resources;
 import com.proxy.kiwi.core.utils.Stopwatch;
-import com.proxy.kiwi.core.v2.service.GenericTaskService;
-import com.proxy.kiwi.core.v2.service.Service;
 import com.proxy.kiwi.explorer.KiwiExplorerPane;
 import com.proxy.kiwi.reader.KiwiReadingPane;
 import javafx.scene.Scene;

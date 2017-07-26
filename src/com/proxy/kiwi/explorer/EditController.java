@@ -3,6 +3,7 @@ package com.proxy.kiwi.explorer;
 import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.services.Config;
 import com.proxy.kiwi.core.services.Thumbnails;
+
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.ChoiceBox;
@@ -38,7 +39,7 @@ public class EditController {
 		Set<String> tags = Config.getTags(folder);
 		// Set<String> artists = Settings.getArtists(folder);
 
-		imageView.setImage(Thumbnails.getCache().get(folder.getImagePath()));
+		imageView.setImage(Thumbnails.getCache().get(Config.getFolderImage(folder)));
 
 		System.out.println(tags.size());
 		for (String tag : tags) {

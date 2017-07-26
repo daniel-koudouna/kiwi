@@ -84,7 +84,7 @@ public class FolderMenu extends ContextMenu {
 
 	public void open() {
 		try {
-			Desktop.getDesktop().open(new File(panel.folder.getFilenameProperty().get()));
+			Desktop.getDesktop().open(new File(panel.folder.getFile().getAbsolutePath()));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

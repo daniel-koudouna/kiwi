@@ -12,6 +12,7 @@ import org.imgscalr.Scalr.Method;
 import org.imgscalr.Scalr.Mode;
 
 import com.proxy.kiwi.app.KiwiApplication;
+import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.image.KiwiImage;
 import com.proxy.kiwi.core.image.Orientation;
 import com.proxy.kiwi.core.services.Config;
@@ -19,7 +20,6 @@ import com.proxy.kiwi.core.utils.FXTools;
 import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Resources;
 import com.proxy.kiwi.core.utils.Stopwatch;
-import com.proxy.kiwi.core.v2.folder.FolderV2;
 
 import dorkbox.systemTray.SystemTray;
 import javafx.application.Platform;
@@ -55,7 +55,7 @@ public class KiwiReadingPane extends StackPane{
 	private Rotate rotate;
 	private Translate translate;
 
-	private volatile FolderV2 folder;
+	private volatile Folder folder;
 	private KiwiImage image;
 	private WritableImage fullImage;
 
@@ -90,8 +90,8 @@ public class KiwiReadingPane extends StackPane{
 		stage.setHeight(Config.getIntOption("height"));
 
 
-		folder = FolderV2.fromFile(path).orElseThrow(NullPointerException::new);
-		folder.load();
+		folder = Folder.fromFile(path).orElseThrow(NullPointerException::new);
+		folder.loadImages(false);
 
 		titleProperty.bind(new SimpleStringProperty("Kiwi - ").concat(folderNameProperty)
 				.concat(" - ").concat(pageProperty.asString()));
@@ -119,7 +119,7 @@ public class KiwiReadingPane extends StackPane{
 
 
 		pagenum.textProperty().bind(pageProperty.asString()
-				.concat(new SimpleStringProperty("/").concat(folder.imageSize())));
+				.concat(new SimpleStringProperty("/").concat(folder.imageCount())));
 
 		folderNameProperty.set(folder.getName());
 		changePage(pageNumber);
@@ -160,9 +160,9 @@ public class KiwiReadingPane extends StackPane{
 					if (folder.contains(file)) {
 						changePage(folder.find(file.getAbsolutePath()));
 					} else {
-						FolderV2 folder = FolderV2.fromFile(file.getAbsolutePath()).orElseThrow(NullPointerException::new);
+						Folder folder = Folder.fromFile(file.getAbsolutePath()).orElseThrow(NullPointerException::new);
 						setFolder(folder);
-						folder.load();
+						folder.loadImages(false);
 						changePage(folder.getStartPage());
 					}
 				}
@@ -185,7 +185,7 @@ public class KiwiReadingPane extends StackPane{
 		case NEXT_FOLDER:
 			folder.next().ifPresent( next -> {
 				Log.print(Log.EVENT, "Switching folder to " + next.getName());
-				next.load();
+				next.loadImages(false);
 				setFolder(next);
 				changePage(1);				
 			});;
@@ -193,7 +193,7 @@ public class KiwiReadingPane extends StackPane{
 		case PREVIOUS_FOLDER:
 			folder.previous().ifPresent(previous -> {
 				Log.print(Log.EVENT, "Switching folder to " + previous.getName());
-				previous.load();
+				previous.loadImages(false);
 				setFolder(previous);
 				changePage(1);				
 			});;
@@ -253,11 +253,11 @@ public class KiwiReadingPane extends StackPane{
 		return pageProperty;
 	}
 
-	public FolderV2 getFolder() {
+	public Folder getFolder() {
 		return folder;
 	}
 
-	public void setFolder(FolderV2 folder) {
+	public void setFolder(Folder folder) {
 		this.folder = folder;
 
 		folderNameProperty.set(folder.getName());
@@ -265,12 +265,12 @@ public class KiwiReadingPane extends StackPane{
 		folder.getLoaded().onChange( (oldVal, newVal) -> {
 			Platform.runLater( () -> {
 				pagenum.textProperty().bind(pageProperty.asString()
-						.concat(new SimpleStringProperty("/").concat(folder.imageSize())));				
+						.concat(new SimpleStringProperty("/").concat(folder.imageCount())));				
 			});
 		});		
 
-		folder.load();
-		Log.print(Log.IO, "Found folder with " + folder.imageSize() + " images");
+		folder.loadImages(false);
+		Log.print(Log.IO, "Found folder with " + folder.imageCount() + " images");
 
 		
 		setChapters();
@@ -309,7 +309,7 @@ public class KiwiReadingPane extends StackPane{
 	}
 
 	public void changePage(int page) {
-		if (page <= 0 || page > folder.imageSize() || isChangingPage) {
+		if (page <= 0 || page > folder.imageCount() || isChangingPage) {
 			return;
 		}
 		Stopwatch.click("Changing page");

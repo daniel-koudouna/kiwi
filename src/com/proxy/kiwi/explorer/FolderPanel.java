@@ -4,6 +4,7 @@ import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.services.Config;
 import com.proxy.kiwi.core.services.Thumbnails;
 import com.proxy.kiwi.core.utils.Log;
+
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -110,8 +111,8 @@ public class FolderPanel extends StackPane {
 		});
 
 		timeline = new Timeline(new KeyFrame(Duration.seconds(0.1), (event) -> {
-			if (Thumbnails.getCache().contains(folder.getImagePath())) {
-				Image image = Thumbnails.getCache().get(folder.getImagePath());
+			if (Thumbnails.getCache().contains(Config.getFolderImage(folder))) {
+				Image image = Thumbnails.getCache().get(Config.getFolderImage(folder));
 				if (image.getProgress() == 1) {
 					setImage(image);
 				} else {

@@ -2,6 +2,7 @@ package com.proxy.kiwi.explorer;
 
 import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.utils.Resources;
+
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.GridPane;

@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 
 import com.proxy.kiwi.app.KiwiApplication;
 import com.proxy.kiwi.core.folder.Folder;
+import com.proxy.kiwi.core.folder.Folders;
 import com.proxy.kiwi.core.services.Config;
-import com.proxy.kiwi.core.services.Folders;
 import com.proxy.kiwi.core.services.Thumbnails;
 import com.proxy.kiwi.core.utils.Resources;
 import com.proxy.kiwi.core.utils.Stopwatch;
@@ -81,6 +81,8 @@ public class KiwiExplorerPane extends AnchorPane{
 
 	private HashMap<String,Boolean> visiblePaths;
 
+	private Folder root;
+
 	public KiwiExplorerPane(Stage stage, String path) {
 
 		this.stage = stage;
@@ -98,10 +100,10 @@ public class KiwiExplorerPane extends AnchorPane{
 			visiblePaths.put(e.getKey(), e.getValue().getAsBoolean());
 		});
 		
-		Folders.mergeRoot(paths);
+		root = Folders.rootFrom(paths);
 
 		flowPane.getChildren().clear();
-		folderQueue = new LinkedBlockingQueue<Folder>();
+		folderQueue = new LinkedBlockingQueue<>();
 
 		menuAnimation = new TranslateTransition(Duration.millis(250), menu);
 
@@ -109,6 +111,8 @@ public class KiwiExplorerPane extends AnchorPane{
 
 		setMenuParent(hotkeyButton, hotkeyMenu);
 
+		searchBox.init(root);
+		
 		searchBox.getQuery().addListener((obs, old, n) -> updateView());
 		
 		searchBox.onChange(this::updateView);
@@ -136,17 +140,8 @@ public class KiwiExplorerPane extends AnchorPane{
 		});
 
 		Platform.runLater(() -> {
-			try {
-				if (Folders.thread != null) {
-					Folders.thread.join();
-				}
 
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-			addPanels(Folders.getRoot());
+			addPanels(root);
 			updateView();
 
 			if (!flowPane.getChildren().isEmpty()) {
@@ -304,6 +299,7 @@ public class KiwiExplorerPane extends AnchorPane{
 		} else {
 			child.setHidden(true);
 		}
+
 	}
 
 	@FXML
@@ -353,7 +349,6 @@ public class KiwiExplorerPane extends AnchorPane{
 		if (selected != null) {
 			Config.setOption("path", selected.getAbsolutePath());
 			Config.addLibrary(selected.getAbsolutePath());
-			Folders.buildRoot(Config.getOption("path"));
 			init();
 		}
 	}
@@ -406,7 +401,7 @@ public class KiwiExplorerPane extends AnchorPane{
 		} else {
 			Stopwatch.click("Starting new JVM");
 
-			String file = folder.getVolumes().get(0).getFilename();
+			String file = folder.images().findFirst().get().getFile().getAbsolutePath();
 
 			KiwiApplication.startReader(file);
 		}
@@ -423,9 +418,8 @@ public class KiwiExplorerPane extends AnchorPane{
 
 	private void queueFolder(Folder folder) {
 		folderQueue.add(folder);
-		folder.getSubfolders().forEach((child) -> {
-			queueFolder(child);
-		});
+		folder.children().forEach(this::queueFolder);
+
 	}
 
 	private void checkInBounds() {

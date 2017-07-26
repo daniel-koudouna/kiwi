@@ -1,4 +1,4 @@
-package com.proxy.kiwi.core.v2.service;
+package com.proxy.kiwi.core.service;
 
 import java.util.LinkedList;
 

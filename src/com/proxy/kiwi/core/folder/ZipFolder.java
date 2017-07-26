@@ -1,114 +1,78 @@
 package com.proxy.kiwi.core.folder;
 
-import org.apache.commons.io.IOUtils;
-
-import com.proxy.kiwi.core.services.Folders;
-
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-public class ZipFolder extends Folder {
+import org.apache.commons.io.IOUtils;
 
-	public File outputDir;
-	HashMap<Folder, Boolean> loaded;
+public class ZipFolder extends Folder{
 
-	public ZipFolder(String name, String path, Folder parent) {
-		super(name, path, parent);
-		loaded = new HashMap<>();
+	File extractDirectory;
+
+	public ZipFolder(File file, String name, Folder parent, File initial) {
+		super(file, name, parent, initial);
 	}
 
 	@Override
-	public void load() {
-		load(this);
-	}
+	protected void loadChildren() {
 
-	public void load(Folder folder) {
-		if (loaded.get(folder) != null && loaded.get(folder).equals(Boolean.TRUE)) {
-			return;
-		}
-		loaded.put(folder, Boolean.TRUE);
-		new Thread(new UnzipRunner(this, folder)).start();
-	}
-
-	@Override
-	protected File[] build() {
+		List<Folder> children = new ArrayList<>();
+		
 		try {
-			File file = new File(filename.get());
-			outputDir = Files.createTempDirectory(Folders.getTempPath(), file.getName()).toFile();
+			extractDirectory = Files.createTempDirectory(Folders.getTempPath(), file.getName()).toFile();
 
-			ZipFile zipFile = null;
-			zipFile = new ZipFile(file);
-
-			boolean hasLoaded = false;
+			ZipFile zipFile = new ZipFile(file);
 
 			Enumeration<? extends ZipEntry> entries = zipFile.entries();
-			while (entries.hasMoreElements() && !hasLoaded) {
-				ZipEntry entry = entries.nextElement();
-				File entryDestination = new File(outputDir, entry.getName());
-				if (entry.isDirectory()) {
-					entryDestination.mkdirs();
-				} else if (Type.getType(entry) == Type.IMAGE){
-					entryDestination.getParentFile().mkdirs();
 
-					InputStream in = zipFile.getInputStream(entry);
-					OutputStream out = new FileOutputStream(entryDestination);
-					IOUtils.copy(in, out);
-					IOUtils.closeQuietly(in);
-					out.close();
-
-					addVolume(new Volume(entryDestination.getName(), entryDestination.getAbsolutePath(), this));
-
-				}
-			}
-			hasLoaded = true;
-			zipFile.close();
-		} catch (IOException e) {
-
-		}
-		return outputDir.listFiles();
-
-	}
-
-	@Override
-	protected String filterName(String name) {
-		return name;
-	}
-
-}
-
-class UnzipRunner implements Runnable {
-
-	ZipFolder folder;
-	Folder target;
-
-	UnzipRunner(ZipFolder folder, Folder target) {
-		this.folder = folder;
-		this.target = target;
-		System.out.println("STARTING");
-	}
-
-	@Override
-	public void run() {
-
-		try {
-			target.clearVolumes();
-			File file = new File(folder.filename.get());
-
-			ZipFile zipFile = null;
-			zipFile = new ZipFile(file);
-
-			Enumeration<? extends ZipEntry> entries = zipFile.entries();
 			while (entries.hasMoreElements()) {
 				ZipEntry entry = entries.nextElement();
-				File entryDestination = new File(folder.outputDir, entry.getName());
+				File entryDestination = new File(extractDirectory, entry.getName());
 				if (entry.isDirectory()) {
 					entryDestination.mkdirs();
-				} else {
+					children.add(new FileFolder(entryDestination, entry.getName(), this, initial));
+				}
+			}
+
+			zipFile.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		if (!children.isEmpty()) {
+			this.children = Optional.of(children);			
+		} else {
+			this.children = Optional.empty();
+		}
+
+	}
+
+	@Override
+	protected void loadImagesImpl(boolean partial) {
+
+		List<FolderImage> images = new ArrayList<>();
+		
+		try {
+			ZipFile zipFile = new ZipFile(file);
+
+			Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+			while (entries.hasMoreElements()) {
+				ZipEntry entry = entries.nextElement();
+				File entryDestination = new File(extractDirectory, entry.getName());
+				if (entry.isDirectory()) {
+					entryDestination.mkdirs();
+				} else if (ItemType.get(entry) == ItemType.IMAGE){
 					entryDestination.getParentFile().mkdirs();
 
 					InputStream in = zipFile.getInputStream(entry);
@@ -116,19 +80,28 @@ class UnzipRunner implements Runnable {
 					IOUtils.copy(in, out);
 					IOUtils.closeQuietly(in);
 					out.close();
-
-					target.addVolume(
-							new Volume(entryDestination.getName(), entryDestination.getAbsolutePath(), target));
-
+					
+					if (entryDestination.getParentFile().getAbsolutePath().equals(extractDirectory)) {
+						images.add(new FolderImage(entryDestination, entryDestination.getName(), this));
+						if (partial) {
+							break;
+						}
+					}
 				}
 			}
-			System.out.println("DONE");
+			
 			zipFile.close();
 		} catch (IOException e) {
 
 		}
-
-		Collections.sort(target.getVolumes());
-
+		
+		if (images.isEmpty()) {
+			this.images = Optional.empty();
+		} else {
+			this.images = Optional.of(images);
+		}
+		
+		children.ifPresent(list -> list.forEach(f -> f.loadImages(false)));
 	}
+
 }

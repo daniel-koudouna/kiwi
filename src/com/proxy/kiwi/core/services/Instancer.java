@@ -5,6 +5,7 @@ import com.proxy.kiwi.core.utils.Stopwatch;
 import java.io.*;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public abstract class Instancer {
@@ -17,6 +18,13 @@ public abstract class Instancer {
 	 * 
 	 */
 
+	private static Path tempPath;
+
+	static {
+		tempPath = Paths.get(System.getProperty("java.io.tmpdir"), "Kiwi");
+		tempPath.toFile().mkdirs();
+	}
+	
 	public static final String SELF_WAKE = "-1";
 
 	public abstract void pause(FileLock lock);
@@ -125,10 +133,10 @@ public abstract class Instancer {
 	}
 
 	private File getDataFile(int i) {
-		return Paths.get(Folders.getTempPath().toString(), getDataName() + "-" + (i < 10 ? "0" + i : i)).toFile();
+		return Paths.get(tempPath.toString(), getDataName() + "-" + (i < 10 ? "0" + i : i)).toFile();
 	}
 
 	private File getLockFile(int i) {
-		return Paths.get(Folders.getTempPath().toString(), getLockName() + "-" + (i < 10 ? "0" + i : i)).toFile();
+		return Paths.get(tempPath.toString(), getLockName() + "-" + (i < 10 ? "0" + i : i)).toFile();
 	}
 }

@@ -1,8 +1,8 @@
 package com.proxy.kiwi.core.services;
 
+import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Stopwatch;
-import com.proxy.kiwi.core.v2.folder.FolderV2;
 import com.proxy.kiwi.explorer.KiwiExplorerPane;
 import com.proxy.kiwi.reader.KiwiReadingPane;
 
@@ -55,7 +55,7 @@ public class KiwiInstancer extends Instancer {
 
 				KiwiReadingPane pane = ((KiwiReadingPane) parent);
 
-				Optional<FolderV2> newFolder = FolderV2.fromFile(input);
+				Optional<Folder> newFolder = Folder.fromFile(input);
 
 				newFolder.ifPresent(folder -> {
 					pane.setFolder(folder);

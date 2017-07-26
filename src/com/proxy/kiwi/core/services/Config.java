@@ -1,6 +1,7 @@
 package com.proxy.kiwi.core.services;
 
 import com.google.gson.*;
+import com.proxy.kiwi.core.folder.FolderImage;
 import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.utils.Command;
 import com.proxy.kiwi.core.utils.FileListener;
@@ -125,6 +126,19 @@ public class Config {
 		config.addProperty(key, value);
 	}
 
+	public static String getFolderImage(Folder folder) {
+		if (propertyExists(folder.getName(), "image")) {
+			return getFolder(folder.getName()).get("image").getAsString();
+		} else {
+			Optional<FolderImage> image = folder.getFirstImage();
+			if (image.isPresent()) {
+				return image.get().getFile().getAbsolutePath();
+			} else {
+				return null;
+			}
+		}
+	}
+	
 	public static String getFolderImage(String folder) {
 		if (!propertyExists(folder, "image")) {
 			return null;

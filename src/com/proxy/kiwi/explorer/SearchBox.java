@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.services.Config;
-import com.proxy.kiwi.core.services.Folders;
 import com.proxy.kiwi.core.utils.Command;
 import com.proxy.kiwi.core.utils.Resources;
 
@@ -51,18 +50,16 @@ public class SearchBox extends HBox{
 	
 	public SearchBox() {
 		loadLayout();
-		Platform.runLater(this::init);
-		init();
 	}
 	
-	public void init() {
+	public void init(Folder root) {
 		Platform.runLater( ()-> {
 			this.prefWidthProperty().bind(this.getScene().getWindow().widthProperty().subtract(300));
 		});
 		
 		parents = new LinkedList<>();
 		
-		parents.add(Folders.getRoot());
+		parents.add(root);
 		tags = new LinkedList<>();
 
 		terms = new SimpleIntegerProperty(1);
@@ -139,13 +136,14 @@ public class SearchBox extends HBox{
 		Folder folder = panel.folder;
 		Set<String> folderTags = Config.getTags(folder);
 
-		if (folder.getParent() == null) {
+		if (!folder.getParent().isPresent()) {
 			return false;
 		}
 
 		// Check that path is visible
 		for (Entry<String,Boolean> entry : visiblePaths.entrySet()) {
-			if (folder.getFilenameProperty().get().contains(entry.getKey()) && !entry.getValue()) {
+
+			if (folder.getFile().getAbsolutePath().contains(entry.getKey()) && !entry.getValue()) {
 				return false;
 			}	
 		}
@@ -155,7 +153,7 @@ public class SearchBox extends HBox{
 		
 		collapse = collapse || ( search.startsWith(TAG_PREFIX) && search.length() > MIN_TAG_LENGTH) || !tags.isEmpty();
 		
-		boolean parentValid = (parents.isEmpty() || folder.getParent().equals(parents.getLast()));
+		boolean parentValid = (parents.isEmpty() || (folder.getParent().isPresent() && folder.getParent().get().equals(parents.getLast())) );
 		boolean anscestorValid = (parents.isEmpty() || folder.hasAncestor(parents.getLast()));
 
 		boolean folderValid = (collapse && anscestorValid) || (!collapse && parentValid);
@@ -173,7 +171,7 @@ public class SearchBox extends HBox{
 			searchValid = remainingTags.stream().anyMatch((s) -> s.toLowerCase().contains(tSearch));
 		} else {
 			if (collapse) {
-				searchValid = search.length() == 0 || folder.getName().toLowerCase().contains(search) || folder.hasAncestorWith(search);
+				searchValid = search.length() == 0 || folder.getName().toLowerCase().contains(search) || folder.hasAncestor(search);
 			} else {
 				searchValid = search.length() == 0 || folder.getName().toLowerCase().contains(search);
 			}

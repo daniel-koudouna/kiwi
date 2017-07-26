@@ -1,11 +1,11 @@
 package com.proxy.kiwi.explorer;
 
-import com.proxy.kiwi.core.folder.Folder;
-
 import javafx.application.Platform;
 import javafx.scene.layout.FlowPane;
 
 import java.util.Queue;
+
+import com.proxy.kiwi.core.folder.Folder;
 
 public class ThreadPanelGen extends Thread {
 	Queue<Folder> folderQueue;
@@ -33,7 +33,7 @@ public class ThreadPanelGen extends Thread {
 
 				pane.getChildren().add(p);
 				controller.loadingBar.setProgress(percent);
-				controller.loadingLabel.setText(f.getFilenameProperty().get());
+				controller.loadingLabel.setText(f.getFile().getName());
 				controller.updateLast();
 
 				if (percent == 1) {
