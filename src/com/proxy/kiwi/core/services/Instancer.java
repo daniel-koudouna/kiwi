@@ -5,6 +5,7 @@ import com.proxy.kiwi.core.utils.Stopwatch;
 import java.io.*;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -84,11 +85,12 @@ public abstract class Instancer {
 		int i = findLock();
 		if (i != -1) {
 			File file = getDataFile(i);
-
+			
 			try {
-				FileWriter w = new FileWriter(file);
-				w.write(args.length == 0 ? " " : args[0]);
-				w.close();
+				OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8);
+				
+				writer.write(args.length == 0 ? " " : args[0]);
+				writer.close();
 				Stopwatch.click("Checking for sleeping instances");
 				return true;
 			} catch (IOException e1) {
