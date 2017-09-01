@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Arrays;
 
 public class FileFolder extends Folder{
 
@@ -17,23 +18,24 @@ public class FileFolder extends Folder{
 		if (entries == null || entries.length == 0) {
 			return;
 		}
-		
+
+		Arrays.sort(entries, FileComparators.WINDOWS_LIKE);
+
 		List<Folder> items = new ArrayList<>(entries.length);
 
-		
 		for (File entry : entries) {
 			ItemType type = ItemType.get(entry);
 			if (type == ItemType.IMAGE) {
 				break;
 			}
-			
+
 			getItem(entry).ifPresent(item  -> {
 				if (item instanceof Folder) {
 					items.add((Folder) item);
 				}
 			});
 		}
-		
+
 		this.children = Optional.of(items);
 	}
 
@@ -43,25 +45,26 @@ public class FileFolder extends Folder{
 		if (entries == null || entries.length == 0) {
 			return;
 		}
-		
+
+		Arrays.sort(entries, FileComparators.WINDOWS_LIKE);
+
 		List<FolderImage> items = new ArrayList<>(entries.length);
 
-		
 		for (File entry : entries) {
 			ItemType type = ItemType.get(entry);
 			if (type != ItemType.IMAGE) {
 				continue;
 			}
-			
+
 			Item image = getItem(entry).get();
 			if (image != null && image instanceof FolderImage) {
 				items.add((FolderImage) image);
 				if (partial) {
-					break;					
+					break;
 				}
 			}
 		}
-		
+
 		this.images = Optional.of(items);
 	}
 

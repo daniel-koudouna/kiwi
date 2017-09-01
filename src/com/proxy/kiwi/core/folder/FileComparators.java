@@ -1,120 +1,75 @@
 package com.proxy.kiwi.core.folder;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class FileComparators {
-
-	public static Comparator<File> WINDOWS_LIKE = new Comparator<File>() {
-
-	      private String str1, str2;
-	      private int pos1, pos2, len1, len2;
-
-	      public int compare(File f1, File f2)
-	      {
-
-	    	str1 = f1.getName();
-	        str2 = f2.getName();
-	        len1 = str1.length();
-	        len2 = str2.length();
-	        pos1 = pos2 = 0;
-
-	        int result = 0;
-	        while (result == 0 && pos1 < len1 && pos2 < len2)
-	        {
-	          char ch1 = str1.charAt(pos1);
-	          char ch2 = str2.charAt(pos2);
-
-	          if (Character.isDigit(ch1))
-	          {
-	            result = Character.isDigit(ch2) ? compareNumbers() : -1;
-	          }
-	          else if (Character.isLetter(ch1))
-	          {
-	            result = Character.isLetter(ch2) ? compareOther(true) : 1;
-	          }
-	          else
-	          {
-	            result = Character.isDigit(ch2) ? 1
-	                   : Character.isLetter(ch2) ? -1
-	                   : compareOther(false);
-	          }
-
-	          pos1++;
-	          pos2++;
-	        }
-
-	        return result == 0 ? len1 - len2 : result;
-	      }
-
-	      private int compareNumbers()
-	      {
-	        int end1 = pos1 + 1;
-	        while (end1 < len1 && Character.isDigit(str1.charAt(end1)))
-	        {
-	          end1++;
-	        }
-	        int fullLen1 = end1 - pos1;
-	        while (pos1 < end1 && str1.charAt(pos1) == '0')
-	        {
-	          pos1++;
-	        }
-
-	        int end2 = pos2 + 1;
-	        while (end2 < len2 && Character.isDigit(str2.charAt(end2)))
-	        {
-	          end2++;
-	        }
-	        int fullLen2 = end2 - pos2;
-	        while (pos2 < end2 && str2.charAt(pos2) == '0')
-	        {
-	          pos2++;
-	        }
-
-	        int delta = (end1 - pos1) - (end2 - pos2);
-	        if (delta != 0)
-	        {
-	          return delta;
-	        }
-
-	        while (pos1 < end1 && pos2 < end2)
-	        {
-	          delta = str1.charAt(pos1++) - str2.charAt(pos2++);
-	          if (delta != 0)
-	          {
-	            return delta;
-	          }
-	        }
-
-	        pos1--;
-	        pos2--; 
-
-	        return fullLen2 - fullLen1;
-	      }
-
-	      private int compareOther(boolean isLetters)
-	      {
-	        char ch1 = str1.charAt(pos1);
-	        char ch2 = str2.charAt(pos2);
-
-	        if (ch1 == ch2)
-	        {
-	          return 0;
-	        }
-
-	        if (isLetters)
-	        {
-	          ch1 = Character.toUpperCase(ch1);
-	          ch2 = Character.toUpperCase(ch2);
-	          if (ch1 != ch2)
-	          {
-	            ch1 = Character.toLowerCase(ch1);
-	            ch2 = Character.toLowerCase(ch2);
-	          }
-	        }
-
-	        return ch1 - ch2;
-	      }
-
-	    };
+    
+    
+    private static final Pattern splitPattern = Pattern.compile("\\d+|\\.|\\s");
+    
+    public static Comparator<File> WINDOWS_LIKE = new Comparator<File>() {
+	    
+	    @Override
+	    public int compare(File f1, File f2) {
+		String str1 = f1.getName();
+		String str2 = f2.getName();
+		
+		Iterator<String> i1 = splitStringPreserveDelimiter(str1).iterator();
+		Iterator<String> i2 = splitStringPreserveDelimiter(str2).iterator();
+		while (true) {
+		    //Til here all is equal.
+		    if (!i1.hasNext() && !i2.hasNext()) {
+			return 0;
+		    }
+		    //first has no more parts -> comes first
+		    if (!i1.hasNext() && i2.hasNext()) {
+			return -1;
+		    }
+		    //first has more parts than i2 -> comes after
+		    if (i1.hasNext() && !i2.hasNext()) {
+			return 1;
+		    }
+		    
+		    String data1 = i1.next();
+		    String data2 = i2.next();
+		    int result;
+		    try {
+			//If both datas are numbers, then compare numbers
+			result = Long.compare(Long.valueOf(data1), Long.valueOf(data2));
+			//If numbers are equal than longer comes first
+			if (result == 0) {
+			    result = -Integer.compare(data1.length(), data2.length());
+			}
+		    } catch (NumberFormatException ex) {
+			//compare text case insensitive
+			result = data1.compareToIgnoreCase(data2);
+		    }
+		    
+		    if (result != 0) {
+			return result;
+		    }
+		}
+	    }
+	    
+	    private List<String> splitStringPreserveDelimiter(String str) {
+		Matcher matcher = splitPattern.matcher(str);
+		List<String> list = new ArrayList<String>();
+		int pos = 0;
+		while (matcher.find()) {
+		    list.add(str.substring(pos, matcher.start()));
+		    list.add(matcher.group());
+		    pos = matcher.end();
+		}
+		list.add(str.substring(pos));
+		return list;
+	    }
+	};
 }

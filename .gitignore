@@ -8,3 +8,5 @@ out
 .idea
 *.iml
 dist
+build
+externalLibs
