@@ -303,17 +303,16 @@ public abstract class Folder extends Item{
 	 * Fixes Windows incompatibility with UTF-8 symbols in folder names.
 	 */
 	private static Optional<Folder> fromFileBackup(String input) {
-		LinkOption[] lo = new LinkOption[0];
+		File path = new File(input);	
 
-		Path path = Paths.get(input);
 		Stack<String> stack = new Stack<>();
 
-		while (!Files.isDirectory(path, lo)) {
-			stack.push(path.getFileName().toString());
-			path = path.getParent();
+		while (!path.isDirectory()) {
+			stack.push(path.getName().toString());
+			path = path.getParentFile();
 		}
 
-		File cd = path.toFile();
+		File cd = path;
 
 		boolean failed = false;
 		while (!stack.isEmpty() && !failed) {
