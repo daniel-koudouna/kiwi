@@ -12,7 +12,7 @@ public enum ItemType {
 	SZ,
 	TAR,
 	UNKNOWN;
-	
+
 	public static ItemType get(FileHeader header) {
 		if (header.isDirectory()) {
 			return FOLDER;
@@ -41,7 +41,7 @@ public enum ItemType {
 		String filename = name.toLowerCase();
 		if (filename.endsWith(".jpg") || filename.endsWith(".png") || filename.endsWith(".gif")) {
 			return IMAGE;
-		} else if (filename.endsWith(".zip") || filename.endsWith(".7z") || filename.endsWith(".tar") || filename.endsWith(".tar.gz")) {
+		} else if (filename.endsWith(".zip") || filename.endsWith(".7z") || filename.endsWith(".tar") || filename.endsWith(".tar.gz") || filename.endsWith(".cbz")) {
 			return ZIP;
 		}
 

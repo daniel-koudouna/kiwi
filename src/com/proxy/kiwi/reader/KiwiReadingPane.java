@@ -93,6 +93,12 @@ public class KiwiReadingPane extends StackPane{
 		folder = Folder.fromFile(path).orElseThrow(NullPointerException::new);
 		folder.loadImages(false);
 
+		System.out.println(folder);
+
+		while (folder.hasSubfolders()) {
+			folder = folder.getChildren().get(0);
+		}
+
 		titleProperty.bind(new SimpleStringProperty("Kiwi - ").concat(folderNameProperty)
 				.concat(" - ").concat(pageProperty.asString()));
 
@@ -187,7 +193,7 @@ public class KiwiReadingPane extends StackPane{
 				Log.print(Log.EVENT, "Switching folder to " + next.getName());
 				next.loadImages(false);
 				setFolder(next);
-				changePage(1);				
+				changePage(1);
 			});;
 			break;
 		case PREVIOUS_FOLDER:
@@ -195,7 +201,7 @@ public class KiwiReadingPane extends StackPane{
 				Log.print(Log.EVENT, "Switching folder to " + previous.getName());
 				previous.loadImages(false);
 				setFolder(previous);
-				changePage(1);				
+				changePage(1);
 			});;
 			break;
 		case CHAPTER_NEXT:
@@ -262,17 +268,25 @@ public class KiwiReadingPane extends StackPane{
 
 		folderNameProperty.set(folder.getName());
 
-		folder.getLoaded().onChange( (oldVal, newVal) -> {
+		Runnable setCount = () -> {
 			Platform.runLater( () -> {
 				pagenum.textProperty().bind(pageProperty.asString()
-						.concat(new SimpleStringProperty("/").concat(folder.imageCount())));				
+						.concat(new SimpleStringProperty("/").concat(folder.imageCount())));
 			});
-		});		
+		};
+
+		if (folder.getLoaded().get()) {
+			setCount.run();
+		}
+
+		folder.getLoaded().onChange( (oldVal, newVal) -> {
+			setCount.run();
+		});
 
 		folder.loadImages(false);
 		Log.print(Log.IO, "Found folder with " + folder.imageCount() + " images");
 
-		
+
 		setChapters();
 
 		SystemTray.get().setStatus("Kiwi Reader - " + folder.getName());
@@ -314,44 +328,42 @@ public class KiwiReadingPane extends StackPane{
 		}
 		Stopwatch.click("Changing page");
 		isChangingPage = true;
-		Platform.runLater(() -> {
+
+		image = null;
+		System.gc();
+
+		Stopwatch.click("Loading Image");
+
+		File file = folder.getImages().get(page - 1).getFile();
+		image = new KiwiImage(file);
+
+		Orientation orientation = image.getOrientation();
+
+		double width = image.getWidth();
+		double height = image.getHeight();
+
+		Stopwatch.click("Loading Image");
+
+//		Platform.runLater(() -> {
 
 			this.pageProperty.set(page);
-
-			File file = folder.getImages().get(page - 1).getFile();
-
-			image = null;
-			System.gc();
-
-			Stopwatch.click("Loading Image");
-
-
-
-
-			image = new KiwiImage(file);
-
-			Orientation orientation = image.getOrientation();
-
-			double width = image.getWidth();
-			double height = image.getHeight();
 
 			heightRatio.set(orientation.getHeightRatio(width, height));
 			widthRatio.set(orientation.getWidthRatio(width, height));
 			view.setRotate(orientation.getRotation());
 
 			if (resamplingMethod != Method.SPEED) {
-				loadImage();				
+				loadImage();
 			} else {
-				view.setImage(image);			
+				view.setImage(image);
 			}
 
-			Stopwatch.click("Loading Image");			
 
-			resetYOffset();
+//			resetYOffset();
 
 			isChangingPage = false;
 			Stopwatch.click("Changing page");
-		});
+//		});
 	}
 
 	private void setChapters() {

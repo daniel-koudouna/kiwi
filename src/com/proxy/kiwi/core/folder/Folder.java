@@ -3,10 +3,6 @@ package com.proxy.kiwi.core.folder;
 import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -30,7 +26,7 @@ import com.proxy.kiwi.core.utils.Dynamic;
  * <li>The files need not be stored in folders recognized by the operating system. Other storage formats are made
  * possible, such as archives, which need to unzip their contents into temporary folders before displaying them.</li>
  * </ul>
- * 
+ *
  * @author Daniel
  *
  */
@@ -40,14 +36,14 @@ public abstract class Folder extends Item{
 
 	Dynamic<Boolean> hasLoaded;
 	Dynamic<Boolean> hasLoadedPartially;
-	
+
 	int startPage = 1;
 	protected File initial;
-	
+
 	/**
 	 * Folders use a two-pass system to improve speed. A folder does enough work only to create the other nodes in the tree, but defers
 	 * loading of the images, which are usually much more numerous than the folders, to the {@link GenericTaskService}.
-	 * 
+	 *
 	 * @param file The file which contains the children
 	 * @param name The internal name of the folder
 	 * @param parent The parent of the folder, or null if the folder is a root node
@@ -63,18 +59,18 @@ public abstract class Folder extends Item{
 		this.initial = initial;
 
 		loadChildren();
-		
+
 		if (autoLoad) {
 			GenericTaskService.enqueue(()-> this.loadImages(false));
 		}
-		
+
 		GenericTaskService.enqueue(()-> this.loadImages(true));
 	}
 
 	public Folder(File file, String name, Folder parent, File initial) {
 		this(file,name,parent,initial,false);
 	}
-	
+
 	public long childrenCount() {
 		return children().count();
 	}
@@ -106,7 +102,7 @@ public abstract class Folder extends Item{
 	public List<Folder> getChildren() {
 		return children.orElse(new LinkedList<>());
 	}
-	
+
 	public List<FolderImage> getImages() {
 		return images.orElse(new LinkedList<>());
 	}
@@ -120,7 +116,7 @@ public abstract class Folder extends Item{
 			return;
 		}
 		for (Folder child : children.get()) {
-			child.refactor();					
+			child.refactor();
 		}
 		if (hasLoaded.get() == false) {
 			return;
@@ -152,20 +148,20 @@ public abstract class Folder extends Item{
 	public static Optional<Folder> fromFile(String path) {
 		return fromFile(path, true);
 	}
-	
+
 	public static Optional<Folder> fromFile(File file, boolean retry) {
 		return fromFile(file.getAbsolutePath(), retry);
 	}
-	
+
 	public static Optional<Folder> fromFile(String path, boolean retry) {
 		Optional<Folder> folder = fromFile(new File(path), new File(path));
 		if (!folder.isPresent() && retry) {
 			folder = fromFileBackup(path);
 		}
-		
+
 		return folder;
 	}
-	
+
 	public static Optional<Folder> fromFile(File file, File initial) {
 		Optional<Item> item = getFrom(file,null, initial);
 		if (item.isPresent() && item.get() instanceof Folder) {
@@ -181,17 +177,17 @@ public abstract class Folder extends Item{
 		if (!images.isPresent()) {
 			return 1;
 		}
-		
+
 		for (int i = 0; i < images.get().size(); i++) {
 			FolderImage img = images.get().get(i);
 			if (img.getFile().getName().equals(filename)) {
 				return i + 1;
 			}
 		}
-		
+
 		return 1;
 	}
-	
+
 	public int find(String absolutePath) {
 
 		if (!images.isPresent()) {
@@ -208,14 +204,23 @@ public abstract class Folder extends Item{
 		return 1;
 	}
 
+	/**
+	 * Finds the next sibling of the Folder in the tree.
+	 */
 	public Optional<Folder> next() {
-		Optional<Folder> parent = Folder.fromFile(file.getParentFile(), true);
+		/**
+		 * Avoid recalculation of the parent if it exists. This saves time in normal folders,
+		 * and ensures zip folders behave as intended.
+		 */
 		if (!parent.isPresent()) {
-			return Optional.empty();
+			parent = Folder.fromFile(file.getParentFile(), true);
+			if (!parent.isPresent()) {
+				return Optional.empty();
+			}
 		}
-		
+
 		List<Folder> subFolders = parent.get().children.orElse(Collections.emptyList());
-		
+
 		boolean found = false;
 		for (Folder child : subFolders) {
 			if (found) {
@@ -226,18 +231,23 @@ public abstract class Folder extends Item{
 				found = true;
 			}
 		}
-		
+
 		return Optional.empty();
 	}
-	
+
+	/**
+	 * @see Folder#next()
+	 */
 	public Optional<Folder> previous() {
-		Optional<Folder> parent = Folder.fromFile(file.getParentFile(), true);
 		if (!parent.isPresent()) {
-			return Optional.empty();
+			parent = Folder.fromFile(file.getParentFile(), true);
+			if (!parent.isPresent()) {
+				return Optional.empty();
+			}
 		}
-		
+
 		List<Folder> subFolders = parent.get().children.orElse(Collections.emptyList());
-		
+
 		Folder prev = null;
 		for (Folder child : subFolders) {
 			if (child.getFile().getAbsolutePath().equals(this.getFile().getAbsolutePath())) {
@@ -247,10 +257,10 @@ public abstract class Folder extends Item{
 			}
 			prev = child;
 		}
-		
+
 		return Optional.empty();
 	}
-	
+
 	public Dynamic<Boolean> getLoaded() {
 		return hasLoaded;
 	}
@@ -258,9 +268,9 @@ public abstract class Folder extends Item{
 	public boolean contains(File file) {
 		return images.orElse(Collections.emptyList()).stream().anyMatch(image -> image.file.getAbsolutePath().equals(file.getAbsolutePath()));
 	}
-	
+
 	protected abstract void loadChildren();
-	
+
 	/**
 	 * The single method exposed for loading images, either partially or fully.
 	 */
@@ -283,13 +293,13 @@ public abstract class Folder extends Item{
 	public void loadImages() {
 		loadImages(false);
 	}
-	
-	/** 
-	 * The internal image loading, implemented separately to 
+
+	/**
+	 * The internal image loading, implemented separately to
 	 * allow for different folder abstractions.
 	 */
 	protected abstract void loadImagesImpl(boolean partial);
-	
+
 	protected Optional<Item> getItem(File file) {
 		return getFrom(file,this, initial);
 	}
@@ -298,12 +308,12 @@ public abstract class Folder extends Item{
 		return Item.from(file, parent, initial);
 	}
 
-	/** 
+	/**
 	 * Backup strategy to load a file when primary folder loading fails.
 	 * Fixes Windows incompatibility with UTF-8 symbols in folder names.
 	 */
 	private static Optional<Folder> fromFileBackup(String input) {
-		File path = new File(input);	
+		File path = new File(input);
 
 		Stack<String> stack = new Stack<>();
 
@@ -317,12 +327,12 @@ public abstract class Folder extends Item{
 		boolean failed = false;
 		while (!stack.isEmpty() && !failed) {
 			String file = stack.pop();
-			
+
 			List<File> files = Arrays.asList(cd.listFiles());
 
 			Optional<File> next = files.stream()
 					.filter(f -> {
-						
+
 						byte[] bytes = file.getBytes(Charset.defaultCharset());
 						String n = new String(bytes, StandardCharsets.US_ASCII);
 
@@ -346,7 +356,7 @@ public abstract class Folder extends Item{
 			System.out.println(cd.getAbsolutePath());
 			return Folder.fromFile(cd, false);
 		}
-		
+
 	}
 
 	public int getStartPage() {
@@ -377,8 +387,20 @@ public abstract class Folder extends Item{
 			return null;
 		}
 	}
-	
+
 	public boolean hasSubfolders() {
 		return children.isPresent() && !children.get().isEmpty();
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder(this.getName());
+		sb.append(" - " + imageCount());
+		children().map(Folder::toString).forEach(s -> {
+			sb.append("\n\t");
+			sb.append(s);
+		});
+
+		return sb.toString();
 	}
 }

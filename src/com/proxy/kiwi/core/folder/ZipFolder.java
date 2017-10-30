@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -21,16 +22,16 @@ public class ZipFolder extends Folder{
 
 	public ZipFolder(File file, String name, Folder parent, File initial) {
 		super(file, name, parent, initial);
+		Folders.addTempFolder(extractDirectory);
 	}
 
 	@Override
 	protected void loadChildren() {
 
 		List<Folder> children = new ArrayList<>();
-		
+
 		try {
 			extractDirectory = Files.createTempDirectory(Folders.getTempPath(), file.getName()).toFile();
-
 			ZipFile zipFile = new ZipFile(file);
 
 			Enumeration<? extends ZipEntry> entries = zipFile.entries();
@@ -48,9 +49,9 @@ public class ZipFolder extends Folder{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 		if (!children.isEmpty()) {
-			this.children = Optional.of(children);			
+			this.children = Optional.of(children);
 		} else {
 			this.children = Optional.empty();
 		}
@@ -61,7 +62,7 @@ public class ZipFolder extends Folder{
 	protected void loadImagesImpl(boolean partial) {
 
 		List<FolderImage> images = new ArrayList<>();
-		
+
 		try {
 			ZipFile zipFile = new ZipFile(file);
 
@@ -80,27 +81,42 @@ public class ZipFolder extends Folder{
 					IOUtils.copy(in, out);
 					IOUtils.closeQuietly(in);
 					out.close();
-					
-					if (entryDestination.getParentFile().getAbsolutePath().equals(extractDirectory)) {
+
+					if (entryDestination.getParentFile().getAbsolutePath().equals(extractDirectory.getAbsolutePath())) {
 						images.add(new FolderImage(entryDestination, entryDestination.getName(), this));
 						if (partial) {
 							break;
 						}
+					} else {
+						children.ifPresent(list ->{
+							list.forEach(f -> {
+								File currFile = entryDestination;
+								do {
+									if (currFile.getAbsolutePath().equals(f.getFile().getAbsolutePath())) {
+										if (!f.images.isPresent()) {
+											f.images = Optional.of(new LinkedList<>());
+										}
+										f.images.get().add(new FolderImage(entryDestination,entryDestination.getName(), f));
+									}
+									currFile = currFile.getParentFile();
+								} while (!currFile.getAbsolutePath().equals(extractDirectory.getAbsolutePath()));
+							});
+						});
 					}
 				}
 			}
-			
+
 			zipFile.close();
 		} catch (IOException e) {
-
+			e.printStackTrace();
 		}
-		
+
 		if (images.isEmpty()) {
 			this.images = Optional.empty();
 		} else {
 			this.images = Optional.of(images);
 		}
-		
+
 		children.ifPresent(list -> list.forEach(f -> f.loadImages(false)));
 	}
 

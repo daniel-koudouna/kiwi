@@ -1,6 +1,12 @@
 package com.proxy.kiwi.core.services;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.channels.FileLock;
+import java.util.Optional;
+
 import com.proxy.kiwi.core.folder.Folder;
+import com.proxy.kiwi.core.folder.Folders;
 import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Stopwatch;
 import com.proxy.kiwi.explorer.KiwiExplorerPane;
@@ -10,10 +16,6 @@ import javafx.application.Platform;
 import javafx.geometry.Dimension2D;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.nio.channels.FileLock;
-import java.util.Optional;
 
 //TODO modernize
 public class KiwiInstancer extends Instancer {
@@ -81,7 +83,20 @@ public class KiwiInstancer extends Instancer {
 
 	@Override
 	public void shutdown() {
+		Folders.getTempFiles().parallelStream().forEach(f -> {
+			deleteDir(f);
+		});
 		System.exit(0);
+	}
+
+	static void deleteDir(File file) {
+	    File[] contents = file.listFiles();
+	    if (contents != null) {
+	        for (File f : contents) {
+	            deleteDir(f);
+	        }
+	    }
+	    file.delete();
 	}
 
 	@Override

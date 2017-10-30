@@ -47,13 +47,13 @@ public class KiwiExplorerPane extends AnchorPane{
 	static final String FXML_FILE = "explorer_pane.fxml";
 
 	@FXML private SearchBox searchBox;
-	
+
 	@FXML private ScrollPane scrollPane;
 	@FXML private FlowPane flowPane;
 	@FXML private CheckBox collapseCheck;
 
 	@FXML private Button optionsButton;
-	
+
 	@FXML private ScrollPane menu;
 
 	@FXML private Label libraryButton;
@@ -61,11 +61,11 @@ public class KiwiExplorerPane extends AnchorPane{
 
 	@FXML private Label hotkeyButton;
 	@FXML private VBox hotkeyMenu;
-	
+
 	@FXML public VBox loadingBox;
 	@FXML public ProgressBar loadingBar;
 	@FXML public Label loadingLabel;
-	
+
 	public FolderPanel selected;
 
 	boolean showMenu = false;
@@ -93,13 +93,13 @@ public class KiwiExplorerPane extends AnchorPane{
 
 	public void init() {
 		stage.setTitle("Kiwi");
-		
+
 		List<String> paths = Config.getLibraries().stream().filter(e -> e.getValue().getAsBoolean()).map(e -> e.getKey()).collect(Collectors.toList());
 		visiblePaths = new HashMap<>();
 		Config.getLibraries().forEach(e -> {
 			visiblePaths.put(e.getKey(), e.getValue().getAsBoolean());
 		});
-		
+
 		root = Folders.rootFrom(paths);
 
 		flowPane.getChildren().clear();
@@ -112,9 +112,9 @@ public class KiwiExplorerPane extends AnchorPane{
 		setMenuParent(hotkeyButton, hotkeyMenu);
 
 		searchBox.init(root);
-		
+
 		searchBox.getQuery().addListener((obs, old, n) -> updateView());
-		
+
 		searchBox.onChange(this::updateView);
 
 		searchBox.onSingleInteract( () -> {
@@ -125,7 +125,7 @@ public class KiwiExplorerPane extends AnchorPane{
 		});
 
 		searchBox.onEmptyFocus(flowPane);
-		
+
 		resetLibraries();
 
 		Config.getHotkeys().forEach((entry) -> {
@@ -151,7 +151,7 @@ public class KiwiExplorerPane extends AnchorPane{
 		});
 
 		scrollSpeed = Config.getIntOption("item_height") / 3.0;
-		
+
 		SystemTray.get().setStatus("Kiwi Explorer Pane");
 	}
 
@@ -173,7 +173,7 @@ public class KiwiExplorerPane extends AnchorPane{
 			event.consume();
 			return;
 		}
-		
+
 		int size = flowPane.getChildren().size();
 		List<Node> children = flowPane.getChildren();
 
@@ -295,11 +295,22 @@ public class KiwiExplorerPane extends AnchorPane{
 		if (searchBox.accept(child, collapseCheck.isSelected(), visiblePaths)) {
 			child.setHidden(false);
 
-			Thumbnails.requestExpress(child.folder);
+			if (isInView(child)) {
+				Thumbnails.requestExpress(child.folder);
+			}
 		} else {
 			child.setHidden(true);
 		}
 
+	}
+
+	private boolean isInView(FolderPanel child) {
+		double lx = child.getLayoutX();
+		double ly = child.getLayoutY();
+		double tx = flowPane.getTranslateX();
+		double ty = flowPane.getTranslateY();
+
+		return true;
 	}
 
 	@FXML
@@ -330,7 +341,7 @@ public class KiwiExplorerPane extends AnchorPane{
 		contextMenu = new FolderMenu(selected);
 		contextMenu.show(selected, x, y);
 	}
-	
+
 	public void selectLibrary(String path) {
 		Config.setOption("path", path);
 
@@ -372,7 +383,7 @@ public class KiwiExplorerPane extends AnchorPane{
 	private void resetLibraries() {
 		for (Iterator<Node> iterator = libraryMenu.getChildren().iterator(); iterator.hasNext();) {
 			Node node = iterator.next();
-			
+
 			if (node instanceof CheckBox) {
 				iterator.remove();
 			}
@@ -462,7 +473,7 @@ public class KiwiExplorerPane extends AnchorPane{
 
 		return panel;
 	}
-	
+
 	private void loadLayout() {
 		FXMLLoader loader = new FXMLLoader(Resources.get(FXML_FILE));
 		loader.setRoot(this);

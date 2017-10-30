@@ -7,7 +7,7 @@ public abstract class Item {
 	protected final File file;
 	protected String name;
 	protected Optional<Folder> parent;
-	
+
 	public Item(File file, String name, Folder parent) {
 		super();
 		this.file = file;
@@ -35,7 +35,7 @@ public abstract class Item {
 		this.parent = Optional.of(folder);
 	}
 
-	
+
 	public static Optional<Item> from(File file, Folder parent, File initial) {
 		switch (ItemType.get(file)) {
 		case FOLDER:

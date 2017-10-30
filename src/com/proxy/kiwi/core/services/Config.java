@@ -1,19 +1,36 @@
 package com.proxy.kiwi.core.services;
 
-import com.google.gson.*;
-import com.proxy.kiwi.core.folder.FolderImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSyntaxException;
 import com.proxy.kiwi.core.folder.Folder;
+import com.proxy.kiwi.core.folder.FolderImage;
 import com.proxy.kiwi.core.utils.Command;
 import com.proxy.kiwi.core.utils.FileListener;
 import com.proxy.kiwi.core.utils.Log;
 import com.proxy.kiwi.core.utils.Resources;
 
 import javafx.scene.input.KeyCode;
-
-import java.io.*;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.Map.Entry;
 
 public class Config {
 
@@ -72,9 +89,9 @@ public class Config {
 			listener = FileListener.create(config_path, () -> {
 				Log.print(Log.IO, "Detected change in config file");
 				init();
-			});			
+			});
 		}
-		
+
 
 	}
 
@@ -138,7 +155,7 @@ public class Config {
 			}
 		}
 	}
-	
+
 	public static String getFolderImage(String folder) {
 		if (!propertyExists(folder, "image")) {
 			return null;
@@ -340,7 +357,7 @@ public class Config {
 
 
 
-	
+
 	public static void addLibrary(String path) {
 		Gson gson = new Gson();
 		JsonElement el = gson.fromJson("false", JsonElement.class);
@@ -420,7 +437,7 @@ public class Config {
 		JsonObject libraries = config.getAsJsonObject("libraries");
 		libraries.add(text, new JsonPrimitive(newVal));
 	}
-	
+
 	public static void setTags(Folder folder, Set<String> tags) {
 		Gson gson = new Gson();
 		checkFolderExists(folder.getName());

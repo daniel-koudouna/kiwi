@@ -1,5 +1,9 @@
 package com.proxy.kiwi.core.services;
 
+import java.io.File;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
+
 import com.proxy.kiwi.core.folder.Folder;
 import com.proxy.kiwi.core.image.Cache;
 import com.proxy.kiwi.core.image.KiwiImage;
@@ -8,10 +12,6 @@ import com.proxy.kiwi.core.utils.Resources;
 
 import javafx.application.Platform;
 import javafx.scene.image.Image;
-
-import java.io.File;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 public class Thumbnails {
 	private static Image loading;
@@ -68,9 +68,9 @@ public class Thumbnails {
 		return expressQueue;
 	}
 
-	public static void request(Folder folder) {
-		requestQueue.add(folder);
-	}
+//	public static void request(Folder folder) {
+//		requestQueue.add(folder);
+//	}
 
 	public static void requestExpress(Folder folder) {
 		expressQueue.add(folder);
@@ -83,6 +83,7 @@ public class Thumbnails {
 }
 
 class ThumbnailThread extends Thread {
+	@Override
 	public void run() {
 
 		Folder folder;
