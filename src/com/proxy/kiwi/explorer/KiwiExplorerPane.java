@@ -2,10 +2,10 @@ package com.proxy.kiwi.explorer;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import com.proxy.kiwi.app.KiwiApplication;
@@ -71,7 +71,7 @@ public class KiwiExplorerPane extends AnchorPane{
 	boolean showMenu = false;
 	TranslateTransition menuAnimation;
 
-	LinkedBlockingQueue<Folder> folderQueue;
+	ArrayList<Triple<Folder,FolderPanel, Integer>> folderQueue;
 
 	public double scrollSpeed;
 
@@ -103,7 +103,7 @@ public class KiwiExplorerPane extends AnchorPane{
 		root = Folders.rootFrom(paths);
 
 		flowPane.getChildren().clear();
-		folderQueue = new LinkedBlockingQueue<>();
+		folderQueue = new ArrayList<>();
 
 		menuAnimation = new TranslateTransition(Duration.millis(250), menu);
 
@@ -153,6 +153,10 @@ public class KiwiExplorerPane extends AnchorPane{
 		scrollSpeed = Config.getIntOption("item_height") / 3.0;
 
 		SystemTray.get().setStatus("Kiwi Explorer Pane");
+
+		loadingBox.setVisible(false);
+
+		makeNewPanels();
 	}
 
 	public void toggleSubmenu(Pane submenu) {
@@ -278,6 +282,8 @@ public class KiwiExplorerPane extends AnchorPane{
 
 	@FXML
 	public void updateView() {
+		makeNewPanels();
+
 		flowPane.getChildren().forEach((comp) -> {
 			FolderPanel child = (FolderPanel) (comp);
 			updateChild(child);
@@ -418,17 +424,29 @@ public class KiwiExplorerPane extends AnchorPane{
 		}
 	}
 
+	public void makeNewPanels() {
+		for (int i = 0; i < folderQueue.size(); i++) {
+			Triple<Folder,FolderPanel,Integer> triple = folderQueue.get(i);
+			if (triple.y == null && searchBox.accept(triple.x, collapseCheck.isSelected(), visiblePaths)) {
+				int index = triple.z;
+
+				triple.y = new FolderPanel(triple.x, this);
+				for (int j = index; j < folderQueue.size(); j++) {
+					folderQueue.get(j).z += 1;
+				}
+				flowPane.getChildren().add(index, triple.y);
+				updateChild(triple.y);
+			}
+		}
+	}
+
 	private void addPanels(Folder folder) {
 		folderQueue.clear();
 		queueFolder(folder);
-
-		Platform.runLater(() -> {
-			new ThreadPanelGen(folderQueue, flowPane, this).start();
-		});
 	}
 
 	private void queueFolder(Folder folder) {
-		folderQueue.add(folder);
+		folderQueue.add(new Triple<>(folder, null, 0));
 		folder.children().forEach(this::queueFolder);
 
 	}
@@ -484,6 +502,10 @@ public class KiwiExplorerPane extends AnchorPane{
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public Folder getRoot() {
+		return root;
 	}
 
 }

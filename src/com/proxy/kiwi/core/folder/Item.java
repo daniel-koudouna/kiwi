@@ -37,18 +37,24 @@ public abstract class Item {
 
 
 	public static Optional<Item> from(File file, Folder parent, File initial) {
-		switch (ItemType.get(file)) {
-		case FOLDER:
-			return Optional.of(new FileFolder(file, file.getName(), parent, initial));
-		case IMAGE:
-			return Optional.of(new FolderImage(file,file.getName(),parent));
-		case ZIP:
-			return Optional.of(new ZipFolder(file, file.getName(), parent, initial));
-		case SZ:
-		case TAR:
-		case UNKNOWN:
-		default:
+		try {
+			switch (ItemType.get(file)) {
+			case FOLDER:
+				return Optional.of(new FileFolder(file, file.getName(), parent, initial));
+			case IMAGE:
+				return Optional.of(new FolderImage(file,file.getName(),parent));
+			case ZIP:
+				return Optional.of(new ZipFolder(file, file.getName(), parent, initial));
+			case SZ:
+			case TAR:
+			case UNKNOWN:
+			default:
+				return Optional.empty();
+			}
+		} catch (Exception e) {
+			System.err.println("Encountered Exception while opening " + file + " :\n " + e.getMessage());
 			return Optional.empty();
 		}
+
 	}
 }

@@ -2,8 +2,6 @@ package com.proxy.kiwi.core.folder;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
@@ -11,17 +9,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class FileComparators {
-    
-    
+
+
     private static final Pattern splitPattern = Pattern.compile("\\d+|\\.|\\s");
-    
+
     public static Comparator<File> WINDOWS_LIKE = new Comparator<File>() {
-	    
+
 	    @Override
 	    public int compare(File f1, File f2) {
 		String str1 = f1.getName();
 		String str2 = f2.getName();
-		
+
 		Iterator<String> i1 = splitStringPreserveDelimiter(str1).iterator();
 		Iterator<String> i2 = splitStringPreserveDelimiter(str2).iterator();
 		while (true) {
@@ -37,7 +35,7 @@ public class FileComparators {
 		    if (i1.hasNext() && !i2.hasNext()) {
 			return 1;
 		    }
-		    
+
 		    String data1 = i1.next();
 		    String data2 = i2.next();
 		    int result;
@@ -52,13 +50,13 @@ public class FileComparators {
 			//compare text case insensitive
 			result = data1.compareToIgnoreCase(data2);
 		    }
-		    
+
 		    if (result != 0) {
 			return result;
 		    }
 		}
 	    }
-	    
+
 	    private List<String> splitStringPreserveDelimiter(String str) {
 		Matcher matcher = splitPattern.matcher(str);
 		List<String> list = new ArrayList<String>();

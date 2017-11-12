@@ -47,6 +47,7 @@ public class Folders {
 			});
 		}
 
+		root.refactor();
 		return root;
 	}
 

@@ -26,48 +26,48 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 
 public class SearchBox extends HBox{
-	
+
 	static final String TAG_PREFIX = ":";
 	static final String FXML_FILE = "search_box.fxml";
 	static final int MIN_TAG_LENGTH = 3;
 
-	
+
 	LinkedList<Folder> parents;
 	LinkedList<String> tags;
 
 	LinkedList<LabelTuple> labels;
-	
+
 	Set<String> allTags;
-	
+
 	IntegerProperty terms;
-	
+
 	private Runnable onSingleHandler;
 	private Runnable onChange;
 	Node onEmptyFocus;
-	
+
 	@FXML private TextField searchField;
 	@FXML private HBox searchTags;
-	
+
 	public SearchBox() {
 		loadLayout();
 	}
-	
+
 	public void init(Folder root) {
 		Platform.runLater( ()-> {
 			this.prefWidthProperty().bind(this.getScene().getWindow().widthProperty().subtract(300));
 		});
-		
+
 		parents = new LinkedList<>();
-		
+
 		parents.add(root);
 		tags = new LinkedList<>();
 
 		terms = new SimpleIntegerProperty(1);
 
 		labels = new LinkedList<>();
-		
+
 		allTags = Config.getTags();
-		
+
 		searchField.setOnKeyPressed((event) -> {
 			if (event.getCode().equals(KeyCode.TAB)) {
 				//TODO autocomplete
@@ -83,7 +83,7 @@ public class SearchBox extends HBox{
 					long possibleTags = allTags.stream().filter(s -> !tags.contains(s)).filter(s -> s.toLowerCase().contains(tag)).count();
 					System.out.println(possibleTags);
 					boolean canAddTag = (possibleTags == 1);
-					
+
 					if (canAddTag) {
 						String singleTag = allTags.stream().filter(s -> !tags.contains(s)).filter(s -> s.toLowerCase().contains(tag)).findFirst().get();
 						tags.add(singleTag);
@@ -101,7 +101,7 @@ public class SearchBox extends HBox{
 		});
 
 	}
-	
+
 	@FXML
 	public void handleInputKeyEvent(KeyEvent event) {
 		if (searchField.getText().trim().length() == 0) {
@@ -120,20 +120,19 @@ public class SearchBox extends HBox{
 		}
 		event.consume();
 	}
-	
+
 	public void onEmptyFocus(Node node) {
 		this.onEmptyFocus = node;
 	}
-	
+
 	public void onSingleInteract(Runnable r) {
 		onSingleHandler = r;
 	}
-	
-	public boolean accept(FolderPanel panel, boolean collapse, HashMap<String, Boolean> visiblePaths) {
+
+
+	public boolean accept(Folder folder, boolean collapse, HashMap<String, Boolean> visiblePaths) {
 		allTags = Config.getTags();
 
-		
-		Folder folder = panel.folder;
 		Set<String> folderTags = Config.getTags(folder);
 
 		if (!folder.getParent().isPresent()) {
@@ -145,14 +144,14 @@ public class SearchBox extends HBox{
 
 			if (folder.getFile().getAbsolutePath().contains(entry.getKey()) && !entry.getValue()) {
 				return false;
-			}	
+			}
 		}
 
-		
+
 		String search = searchField.textProperty().getValueSafe().toLowerCase().trim();
-		
+
 		collapse = collapse || ( search.startsWith(TAG_PREFIX) && search.length() > MIN_TAG_LENGTH) || !tags.isEmpty();
-		
+
 		boolean parentValid = (parents.isEmpty() || (folder.getParent().isPresent() && folder.getParent().get().equals(parents.getLast())) );
 		boolean anscestorValid = (parents.isEmpty() || folder.hasAncestor(parents.getLast()));
 
@@ -163,9 +162,9 @@ public class SearchBox extends HBox{
 		Set<String> remainingTags = folderTags.stream()
 				.filter( (s) -> (!tags.contains(s)))
 				.collect(Collectors.toSet());
-		
+
 		boolean searchValid = false;
-		
+
 		if (search.startsWith(TAG_PREFIX)) {
 			String tSearch = search.substring(TAG_PREFIX.length());
 			searchValid = remainingTags.stream().anyMatch((s) -> s.toLowerCase().contains(tSearch));
@@ -177,10 +176,14 @@ public class SearchBox extends HBox{
 			}
 
 		}
-		
+
 		boolean isValid = folderValid && tagsValid && searchValid;
 
 		return isValid;
+	}
+
+	public boolean accept(FolderPanel panel, boolean collapse, HashMap<String, Boolean> visiblePaths) {
+		return accept(panel.folder, collapse,visiblePaths);
 	}
 
 	public StringProperty getQuery() {
@@ -190,7 +193,7 @@ public class SearchBox extends HBox{
 	public IntegerProperty getTerms() {
 		return terms;
 	}
-	
+
 	private void addFolder(String name) {
 		Label l = new Label(name);
 		labels.add(new LabelTuple(LabelType.FOLDER, l));
@@ -247,7 +250,7 @@ public class SearchBox extends HBox{
 		}
 		tryChange();
 	}
-	
+
 	public void tryChange() {
 		Platform.runLater(() -> {
 			if (onChange != null) {
@@ -255,11 +258,11 @@ public class SearchBox extends HBox{
 			}
 		});
 	}
-	
+
 	public void onChange(Runnable onChange) {
 		this.onChange = onChange;
 	}
-	
+
 	private void loadLayout() {
 		FXMLLoader loader = new FXMLLoader(Resources.get(FXML_FILE));
 		loader.setRoot(this);
@@ -271,6 +274,7 @@ public class SearchBox extends HBox{
 			e.printStackTrace();
 		}
 	}
+
 }
 
 enum LabelType {
@@ -280,7 +284,7 @@ enum LabelType {
 class LabelTuple {
 	public LabelType type;
 	public Label label;
-	
+
 	public LabelTuple(LabelType type, Label label) {
 		super();
 		this.type = type;

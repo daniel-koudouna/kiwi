@@ -133,6 +133,14 @@ public abstract class Folder extends Item{
 				f2.setParent(this);
 				f2.setName(child.getName() + " - " + f2.getName());
 				i--;
+			} else {
+				boolean noImages = !child.images.isPresent() || child.images.get().size() == 0;
+				boolean noChildren = !child.children.isPresent() || child.children.get().size() == 0;
+
+				if (noImages && noChildren) {
+					children.get().remove(i);
+					i--;
+				}
 			}
 		}
 	}

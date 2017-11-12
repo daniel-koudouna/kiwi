@@ -358,8 +358,10 @@ public class KiwiReadingPane extends StackPane{
 				view.setImage(image);
 			}
 
+			Platform.runLater(() -> {
+				resetYOffset();
+			});
 
-//			resetYOffset();
 
 			isChangingPage = false;
 			Stopwatch.click("Changing page");

@@ -46,15 +46,17 @@ public class ZipFolder extends Folder{
 			}
 
 			zipFile.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
-		if (!children.isEmpty()) {
-			this.children = Optional.of(children);
-		} else {
+			if (!children.isEmpty()) {
+				this.children = Optional.of(children);
+			} else {
+				this.children = Optional.empty();
+			}
+		} catch (IOException e) {
+			System.err.println("Encountered exception opening file " + this.name + ": " + e.getMessage());
 			this.children = Optional.empty();
 		}
+
 
 	}
 
@@ -107,15 +109,19 @@ public class ZipFolder extends Folder{
 			}
 
 			zipFile.close();
+
+			if (images.isEmpty()) {
+				this.images = Optional.empty();
+			} else {
+				this.images = Optional.of(images);
+			}
+
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println("Encountered exception opening file " + this.name + ": " + e.getMessage());
+			this.images = Optional.empty();
 		}
 
-		if (images.isEmpty()) {
-			this.images = Optional.empty();
-		} else {
-			this.images = Optional.of(images);
-		}
+
 
 		children.ifPresent(list -> list.forEach(f -> f.loadImages(false)));
 	}
