@@ -117,6 +117,15 @@ public class KiwiExplorerPane extends AnchorPane{
 
 		searchBox.onChange(this::updateView);
 
+		searchBox.onFolderChange = (f) -> {
+			folderQueue.stream().filter(t -> t.x.equals(f)).findAny().ifPresent(t -> {
+				updateView();
+				Platform.runLater(() -> {
+					checkInBounds(t.y);
+				});
+			});;
+		};
+
 		searchBox.onSingleInteract( () -> {
 			FolderPanel panel = getSingleVisible();
 			if (panel != null) {
@@ -451,12 +460,11 @@ public class KiwiExplorerPane extends AnchorPane{
 
 	}
 
-	private void checkInBounds() {
-
+	private void checkInBounds(FolderPanel panel) {
 	    Bounds viewport = scrollPane.getViewportBounds();
 	    double contentHeight = scrollPane.getContent().getBoundsInLocal().getHeight();
-	    double nodeMinY = selected.getBoundsInParent().getMinY();
-	    double nodeMaxY = selected.getBoundsInParent().getMaxY();
+	    double nodeMinY = panel.getBoundsInParent().getMinY();
+	    double nodeMaxY = panel.getBoundsInParent().getMaxY();
 	    double viewportMinY = (contentHeight - viewport.getHeight()) * scrollPane.getVvalue();
 	    double viewportMaxY = viewportMinY + viewport.getHeight();
 	    if (nodeMinY < viewportMinY) {
@@ -464,6 +472,10 @@ public class KiwiExplorerPane extends AnchorPane{
 	    } else if (nodeMaxY > viewportMaxY) {
 	    	scrollPane.setVvalue((nodeMaxY - viewport.getHeight()) / (contentHeight - viewport.getHeight()));
 	    }
+	}
+
+	private void checkInBounds() {
+		checkInBounds(selected);
 	}
 
 	private void setMenuParent(Label parent, Pane child) {

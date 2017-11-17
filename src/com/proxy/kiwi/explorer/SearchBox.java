@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.proxy.kiwi.core.folder.Folder;
@@ -47,6 +48,7 @@ public class SearchBox extends HBox{
 
 	@FXML private TextField searchField;
 	@FXML private HBox searchTags;
+	public Consumer<Folder> onFolderChange;
 
 	public SearchBox() {
 		loadLayout();
@@ -203,7 +205,7 @@ public class SearchBox extends HBox{
 
 	private void removeLastFolder() {
 		if (parents.size() > 1) {
-			parents.removeLast();
+			Folder folder = parents.removeLast();
 			for (int i = labels.size() -1 ; i >= 0; i--) {
 				if (labels.get(i).type == LabelType.FOLDER) {
 					searchTags.getChildren().remove(labels.get(i).label);
@@ -211,6 +213,9 @@ public class SearchBox extends HBox{
 					tryChange();
 					break;
 				}
+			}
+			if (onFolderChange != null) {
+				onFolderChange.accept(folder);
 			}
 		}
 	}
