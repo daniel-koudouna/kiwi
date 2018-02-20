@@ -3,7 +3,7 @@
 ![Kiwi Logo](/src/com/proxy/kiwi/res/kiwi.png)
 
 ## Overview
-Kiwi is a comprehensive image viewing package, which includes a lightning fast reader, and a rich file explorer to browse and manage image directories. Kiwi was built from the disappointing photo viewers bundled with operating systems such as windows, and the lack of alternative options. 
+Kiwi is a comprehensive image viewing package, which includes a lightning fast reader, and a rich file explorer to browse and manage image directories. Kiwi was built from the disappointing photo viewers bundled with operating systems such as Windows, and the lack of alternative options. 
 
 Kiwi works best with a nested directory structure, and is ideal for browsing through hundreds of images, such as comics/manga or camera photos. Kiwi offers configurable quality options, to balance the speed/quality depending on the use case scenario.
 
