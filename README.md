@@ -7,7 +7,7 @@ Kiwi is a comprehensive image viewing package, which includes a lightning fast r
 
 Kiwi works best with a nested directory structure, and is ideal for browsing through hundreds of images, such as comics/manga or camera photos. Kiwi offers configurable quality options, to balance the speed/quality depending on the use case scenario.
 
-Kiwi was heavily inspired by [CDisplay](http://www.cdisplay.me/), an old image viewer whose development has been discontinued. Although other alternatives have since surfaced, Kiwi was built from the ground up to be as fast as possible given the limitations of the platform, as well as provide enough functionality and integration with the operating system to become a standalone application for image viewing.
+Kiwi was heavily inspired by [CDisplay](http://www.cdisplay.me/), an old image viewer whose development has been discontinued. Although other alternatives have since surfaced, Kiwi was built from the ground up to be as fast as possible given the limitations of the platform, as well as to provide enough functionality and integration with the operating system to become a standalone application for image viewing.
 Kiwi is written in Java, using the JavaFX GUI Framework, with the aim of (eventually) being cross platform. 
 
 ## Downloads
