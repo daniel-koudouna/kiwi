@@ -1,66 +1,91 @@
 package com.proxy.kiwi.app;
 
-import com.proxy.kiwi.core.service.GenericTaskService;
-import com.proxy.kiwi.core.service.Service;
-import com.proxy.kiwi.core.services.Config;
-import com.proxy.kiwi.core.services.KiwiInstancer;
-import com.proxy.kiwi.core.utils.Resources;
-import com.proxy.kiwi.core.utils.Stopwatch;
-import com.proxy.kiwi.explorer.KiwiExplorerPane;
-import com.proxy.kiwi.reader.KiwiReadingPane;
+import com.proxy.kiwi.tree.Tree;
+import com.proxy.kiwi.tree.event.TreeBuilt;
+import com.proxy.kiwi.tree.node.FolderNode;
+import com.proxy.kiwi.tree.node.ImageNode;
+import com.proxy.kiwi.tree.node.Node;
+import com.proxy.kiwi.ui.Explorer;
+import com.proxy.kiwi.ui.Viewer;
+import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
-import java.io.IOException;
+import javax.swing.text.View;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.LinkedList;
 import java.util.List;
 
-public class Kiwi extends KiwiApplication {
+public class Kiwi extends Application {
+    public static URL resource(String path) {
+        return Kiwi.class.getResource("../res/" + path);
+    }
 
-	public static void main(String[] args) {
-		
-		Service.init(GenericTaskService.class);
-		
-		if (args.length != 0) {
-			KiwiInstancer instancer = new KiwiInstancer();
+    @Override
+    public void start(Stage stage) throws Exception{
+        List<String> params = getParameters().getUnnamed();
 
-			try {
-				boolean woke = instancer.wakeIfExists(args);
-				if (woke) {
-					System.exit(0);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}			
-		}
+        if (params.size() == 0) {
+            long then = System.nanoTime();
 
-		launch(args);
-	}
+            Path rootPath = Paths.get("/mnt/Storage/Cloud/Hens");
+            FolderNode root = new FolderNode(null,rootPath);
 
-	protected void initialize(Stage stage) {
-		List<String> params = getParameters().getUnnamed();
+            Tree tree = new Tree(root);
 
-		Scene scene;
-		
-		if (params.size() > 0) {
-			Stopwatch.click("Loading reader");
+            //tree.onEvent((t) -> {
+            //    if (t instanceof TreeBuilt) {
+            //        ((TreeBuilt )t).tree.stream().forEach(n -> System.out.println(n.path));
+            //    }
+            //});
 
-			String path = params.get(0);
+            Explorer controller = new Explorer(tree);
+            stage.setTitle("Hello World");
+            stage.setScene(new Scene(controller.component(),300, 275));
+            stage.getScene().getStylesheets().add(Kiwi.resource("application.css").toString());
+            stage.show();
 
-			scene = new Scene(new KiwiReadingPane(stage, path));
+            stage.setOnCloseRequest((e) -> {
+                controller.exit();
+            });
 
-			Stopwatch.click("Loading reader");
-		} else {
-			Stopwatch.click("Loading explorer");
-			
-			scene = new Scene(new KiwiExplorerPane(stage, Config.getOption("path")));
+            long now = System.nanoTime();
+            System.out.println("Startup Time " + ((now - then)/1_000_000_000.0) + " s");
+        } else {
+            long then = System.nanoTime();
 
-			Stopwatch.click("Loading explorer");
-		}
-		
-		stage.getIcons().add(new Image(Resources.get("kiwi_small.png").toString()));
-		stage.setScene(scene);
-		stage.show();
-	}
+            String str = params.get(0);
+            Path path = Paths.get(str);
 
+            if (!Node.isImage(path)) {
+                System.exit(0);
+            }
+
+            ImageNode node = new ImageNode(null,path.getParent());
+            node.build();
+            LinkedList<ImageNode> list = new LinkedList<>();
+            list.add(node);
+            Viewer controller = new Viewer(list, path);
+            stage.setTitle("Hello World");
+            stage.setScene(new Scene(controller.component(),300, 275));
+            stage.getScene().getStylesheets().add(Kiwi.resource("application.css").toString());
+            stage.show();
+
+            stage.setOnCloseRequest((e) -> {
+                controller.exit();
+            });
+
+            long now = System.nanoTime();
+            System.out.println("Startup Time " + ((now - then)/1_000_000_000.0) + " s");
+        }
+
+    }
+
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 }

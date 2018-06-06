@@ -1,96 +1,10 @@
-/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
-
-.text {
-	-fx-font-family: "Ubuntu Bold";	
+.tile {
 }
 
-.large {
-	-fx-font-size: 18;
+.tile-box {
+    -fx-background-color: #00000077;
 }
 
-.fa {
-	-fx-font-family: "FontAwesome";
-}
-
-.menu {
-	-fx-background-color: rgba(200,200,200,1);
-}
-
-.scroll-menu > .viewport {
-   -fx-background-color: rgba(200,200,200,1);
-}
-
-.menu-item{
-	-fx-pref-width: 175;
-}
-
-.right-menu-item{
-	-fx-pref-width: 10000;
-	-fx-alignment: center;
-	-fx-font-family: "Ubuntu Bold";
-	-fx-font-size: 20;
-	-fx-padding: 15;
-}
-
-
-
-.sub-menu-item {
-	-fx-pref-width: 10000;
-	-fx-alignment: center;
-	-fx-font-family: "Ubuntu Bold";
-	-fx-font-size: 16;
-	-fx-padding: 15;	
-}
-
-.right-menu-item:hover, .sub-menu-item:hover, .right-menu-item:selected, .right-menu-item:focused {
-	-fx-background-color: rgba(0,255,0,0.5);
-	-fx-cursor: hand;	
-}
-
-.folder-title {
-	-fx-alignment: center;
-	-fx-text-alignment: center;
-	-fx-font-size: 18;
-	-fx-text-fill: white;
-	-fx-wrap-text: true;
-	-fx-content-display: bottom;
-	-fx-padding: 0 10 0 10;
-}
-
-.tags Label{
-	-fx-background-color: rgb(187,187,187);
-	-fx-background-radius: 5px;
-	-fx-padding: 5px;	
-}
-
-.scroll-pane .scroll-bar:vertical {
-    -fx-unit-increment: 160 ;
-    -fx-block-increment: 300;
-}
-
-
-.clickable {
-	-fx-opacity: 0.5;
-}
-
-.clickable:hover {
-	-fx-opacity: 1.0;
-}
-
-.settings-btn{
-	-fx-background-image: url("options.png");
-	-fx-background-size: 50 50;
-	-fx-background-repeat: no-repeat;
-	-fx-background-position: center;
-	-fx-background-color: rgba(1.0,1.0,1.0,0.0);
-	-fx-opacity: 0.2;
-}
-
-.settings-btn:hover{
-	-fx-opacity: 1.0;
-}
-
-.chapters ChapterLabel {
-	-fx-font-size: 20;
-	-fx-pref-height: 10000;	
+.tile-box Label {
+    -fx-text-fill: #fff;
 }

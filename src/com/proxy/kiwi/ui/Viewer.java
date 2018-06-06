@@ -1,0 +1,102 @@
+package com.proxy.kiwi.ui;
+
+import com.proxy.kiwi.app.Kiwi;
+import com.proxy.kiwi.instancer.InstanceManager;
+import com.proxy.kiwi.tree.Tree;
+import com.proxy.kiwi.tree.node.ImageNode;
+import com.proxy.kiwi.utils.Dynamic;
+import javafx.fxml.FXML;
+import javafx.scene.Group;
+import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Path;
+import java.util.LinkedList;
+import java.util.Optional;
+import java.util.ResourceBundle;
+
+public class Viewer extends AbstractController{
+
+    private Dynamic<Path> current;
+    private LinkedList<ImageNode> flatTree;
+    private Dynamic<ImageNode> currentBranch;
+
+    @FXML
+    public StackPane root;
+
+    @FXML
+    public ImageView view;
+
+    @FXML
+    public Group group;
+
+    @FXML
+    public Label pageNum;
+
+    @FXML
+    public VBox chapters;
+
+    public Viewer(LinkedList<ImageNode> tree, Path initial) {
+        super();
+       this.flatTree = tree;
+       this.current = new Dynamic<>(initial);
+
+        System.out.println(initial);
+
+       Optional<ImageNode> presentNode = tree.stream().filter(n -> {
+           return n.getImages().anyMatch(p -> p.equals(initial));
+       }).findFirst();
+
+        this.currentBranch = new Dynamic<>(presentNode.orElseThrow(() -> new RuntimeException()));
+    }
+
+    private void setImage(Path path) {
+        try {
+            view.setImage(new Image(path.toUri().toURL().toExternalForm()));
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private ImageNode getPrevious() {
+        return flatTree.get(Math.max(this.flatTree.size() - 1,this.flatTree.indexOf(this.current.get())-1));
+    }
+
+    private ImageNode getNext() {
+        return flatTree.get(Math.max(this.flatTree.size() - 1,this.flatTree.indexOf(this.current.get())+1));
+    }
+
+    @FXML
+    public void onKeyPress(KeyEvent e) {
+        switch(e.getCode()) {
+            case A:
+                this.current.update(currentBranch.get().before(this.current.get()));
+               break;
+            case D:
+                this.current.update(currentBranch.get().after(this.current.get()));
+                break;
+            case Q:
+                break;
+        }
+    }
+
+    @Override
+    protected String path() {
+        return "viewer.fxml";
+    }
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        view.fitWidthProperty().bind(root.widthProperty());
+        view.fitHeightProperty().bind(root.heightProperty());
+
+        this.current.onChange(this::setImage);
+        setImage(this.current.get());
+    }
+}
