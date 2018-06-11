@@ -1,22 +1,23 @@
 package com.proxy.kiwi.ui;
 
+import java.net.URL;
+import java.util.ResourceBundle;
+
 import com.proxy.kiwi.app.Kiwi;
 import com.proxy.kiwi.image.KImage;
 import com.proxy.kiwi.image.KMetadata;
 import com.proxy.kiwi.tree.filter.NodeStatus;
+import com.proxy.kiwi.tree.node.Node;
+
 import javafx.animation.FadeTransition;
 import javafx.fxml.FXML;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import com.proxy.kiwi.tree.node.Node;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
-
-import java.net.URL;
-import java.util.ResourceBundle;
 
 public class Tile extends AbstractController{
     @FXML
@@ -37,6 +38,8 @@ public class Tile extends AbstractController{
 
     boolean hasLoadedImage;
     private final Explorer parent;
+
+    private boolean visible;
 
     static final Image LOADING_IMAGE;
 
@@ -75,6 +78,7 @@ public class Tile extends AbstractController{
         showTileBox.setDuration(Duration.seconds(duration));
         showTileBox.setFromValue(0);
         showTileBox.setToValue(1);
+
         hideTileBox = new FadeTransition();
         hideTileBox.setNode(tileBox);
         hideTileBox.setDuration(Duration.seconds(duration));
@@ -89,7 +93,8 @@ public class Tile extends AbstractController{
     private void update(NodeStatus status) {
         switch (status) {
             case SHOW_SELF:
-                root.setOpacity(1);
+            	visible = true;
+            	root.setOpacity(1);
                 if (!hasLoadedImage) {
                     hasLoadedImage = true;
                     setImageWithDimensions();
@@ -97,6 +102,7 @@ public class Tile extends AbstractController{
                 break;
             case SHOW_CHILDREN:
             case HIDE:
+            	visible = false;
                 root.setOpacity(0.2);
                 break;
         }
@@ -159,6 +165,10 @@ public class Tile extends AbstractController{
 
     @FXML public void onClick() {
         parent.onClick(this);
+    }
+
+    public boolean isVisible() {
+    	return visible;
     }
 
     public void show() {

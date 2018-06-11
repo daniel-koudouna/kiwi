@@ -1,8 +1,5 @@
 package com.proxy.kiwi.tree.node;
 
-import com.proxy.kiwi.tree.TreeNode;
-import com.proxy.kiwi.tree.event.TreeEvent;
-
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -12,9 +9,16 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
 
+import com.proxy.kiwi.tree.TreeNode;
+import com.proxy.kiwi.tree.event.TreeEvent;
+
 public class ImageNode extends Node{
 
-    List<Path> images;
+    /**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+	List<URI> images;
 
     public ImageNode(TreeNode parent, Path path) throws NodeException {
         super(parent, path);
@@ -24,7 +28,10 @@ public class ImageNode extends Node{
     @Override
     protected void buildInternal() {
         try {
-            Files.list(getPath()).filter(FolderNode::isImage).forEach(images::add);
+            Files.list(getPath())
+            	.filter(FolderNode::isImage)
+            	.map(Path::toUri)
+            	.forEach(images::add);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -46,7 +53,8 @@ public class ImageNode extends Node{
     }
 
     public Stream<Path> getImages() {
-        return images.stream();
+        return images.stream()
+        		.map(Paths::get);
     }
 
     @Override
@@ -61,8 +69,8 @@ public class ImageNode extends Node{
 
     public Path before(Path path) {
         for (int i = 0; i < images.size(); i++) {
-            if (images.get(i).equals(path)) {
-                return images.get(Math.max(0,i-1));
+            if (Paths.get(images.get(i)).equals(path)) {
+                return Paths.get(images.get(Math.max(0,i-1)));
             }
         }
 
@@ -71,8 +79,8 @@ public class ImageNode extends Node{
 
     public Path after(Path path) {
         for (int i = 0; i < images.size(); i++) {
-            if (images.get(i).equals(path)) {
-                return images.get(Math.min(images.size()-1,i+1));
+            if (Paths.get(images.get(i)).equals(path)) {
+                return Paths.get(images.get(Math.min(images.size()-1,i+1)));
             }
         }
 

@@ -1,5 +1,24 @@
 package com.proxy.kiwi.ui;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.URL;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.ResourceBundle;
+
+import org.apache.tools.ant.util.JavaEnvUtils;
+
+import com.proxy.kiwi.app.Kiwi;
+import com.proxy.kiwi.instancer.LaunchParameters;
 import com.proxy.kiwi.tree.Tree;
 import com.proxy.kiwi.tree.event.ChildAdded;
 import com.proxy.kiwi.tree.event.TreeBuilt;
@@ -8,20 +27,17 @@ import com.proxy.kiwi.tree.filter.AbstractFilter;
 import com.proxy.kiwi.tree.filter.AbstractPipeFilter;
 import com.proxy.kiwi.tree.filter.Filter;
 import com.proxy.kiwi.tree.filter.NodeStatus;
+import com.proxy.kiwi.tree.node.ImageNode;
 import com.proxy.kiwi.tree.node.Node;
 import com.proxy.kiwi.utils.TaskQueue;
+
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.TilePane;
-
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.URL;
-import java.util.*;
 
 public class Explorer extends AbstractController {
     @FXML
@@ -48,7 +64,7 @@ public class Explorer extends AbstractController {
         this.root = root;
         tiles = new ArrayList<>();
 
-        rootFilter = Filter.and(Filter.in(root));
+        rootFilter = Filter.or(Filter.parent(root));
         tempRootFilter = Filter.and(Filter.parent(root));
         queryFilter = Optional.empty();
         activeFilters = new LinkedList<>();
@@ -152,13 +168,91 @@ public class Explorer extends AbstractController {
         onEnter(tile);
     }
 
+    @FXML
+    public void onKey(KeyEvent event) {
+    	switch (event.getCode()) {
+    	case BACK_SPACE:
+    		if (activeFilters.isEmpty()) {
+    			return;
+    		}
+    		activeFilters.remove(activeFilters.size() - 1);
+    		updateView();
+    		break;
+    	default:
+   			break;
+    	}
+    }
+
     public void onClick(Tile tile) {
-        System.out.println(tile.node.getPath());
+    	if (!tile.isVisible()) {
+    		return;
+    	}
 
-        AbstractPipeFilter a1 = Filter.and(Filter.in(tile.node));
-        AbstractPipeFilter a2 = Filter.and(Filter.in(tile.node));
+    	if (tile.node instanceof ImageNode) {
+    		String classpath = System.getProperty("java.class.path");
+    		String path = JavaEnvUtils.getJreExecutable("java");
+    		String tempDir = System.getProperty("java.io.tmpdir");
 
-        activeFilters.add(Filter.and(Filter.in(tile.node)));
+    		Path tempFile = Paths.get(tempDir, "kiwi.tmp");
+
+    		System.out.println("WRITING TEMP FILE");
+
+    		LinkedList<ImageNode> nodeList = new LinkedList<>();
+
+    		root.stream()
+    			.filter(n -> n.status.get() == NodeStatus.SHOW_SELF)
+    			.filter(n -> n instanceof ImageNode)
+    			.map(n -> ((ImageNode)n))
+    			.forEach(nodeList::add);
+
+    		Path initialPath = ((ImageNode)tile.node).getImages().findFirst().get();
+
+    		LaunchParameters params = new LaunchParameters(initialPath, nodeList);
+
+    		try {
+				Files.createFile(tempFile);
+    		} catch (FileAlreadyExistsException e) {
+    			// OK
+    		} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+
+			try {
+	            FileOutputStream fos = new FileOutputStream(tempFile.toFile());
+	            ObjectOutputStream oos = new ObjectOutputStream(fos);
+				oos.writeObject(params);
+				oos.close();
+			} catch (FileNotFoundException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			} catch (IOException e2) {
+				// TODO Auto-generated catch block
+				e2.printStackTrace();
+			}
+
+
+    		ProcessBuilder processBuilder = new ProcessBuilder(path, "-cp", classpath, Kiwi.class.getName(), tempFile.toString());
+    		processBuilder.inheritIO();
+    		try {
+				processBuilder.start();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+    		return;
+    	}
+
+        AbstractPipeFilter filter = Filter.or(Filter.in(tile.node));
+
+        activeFilters.forEach(f -> System.out.println(f));
+
+        if (activeFilters.contains(filter)) {
+        	activeFilters.remove(filter);
+        } else {
+            activeFilters.add(filter);
+        }
         updateView();
     }
 

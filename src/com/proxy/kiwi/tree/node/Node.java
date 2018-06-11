@@ -1,11 +1,5 @@
 package com.proxy.kiwi.tree.node;
 
-import com.proxy.kiwi.utils.Dynamic;
-import com.proxy.kiwi.tree.Tree;
-import com.proxy.kiwi.tree.TreeNode;
-import com.proxy.kiwi.tree.event.TreeEvent;
-import com.proxy.kiwi.tree.filter.NodeStatus;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.net.MalformedURLException;
@@ -15,6 +9,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.stream.Stream;
+
+import com.proxy.kiwi.tree.TreeNode;
+import com.proxy.kiwi.tree.event.TreeEvent;
+import com.proxy.kiwi.tree.filter.NodeStatus;
+import com.proxy.kiwi.utils.Dynamic;
 
 public abstract class Node extends TreeNode implements Comparable, Serializable {
     public final URI uri;
@@ -79,11 +78,17 @@ public abstract class Node extends TreeNode implements Comparable, Serializable 
         }
     }
 
+    @Override
+	public String toString() {
+    	return getPath().getFileName().toString();
+    }
+
     public Path getPath() {
         return Paths.get(uri);
     }
 
-    public void emit(TreeEvent event) {
+    @Override
+	public void emit(TreeEvent event) {
        parent.emit(event);
     }
 
