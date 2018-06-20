@@ -38,15 +38,12 @@ public class Kiwi extends Application {
 
             Tree tree = new Tree(root);
 
-            Explorer controller = new Explorer(tree);
+            Explorer controller = new Explorer(tree, stage);
 
             stage.setScene(new Scene(controller.component(),700, 700));
             stage.setOnCloseRequest((e) -> {
                 controller.exit();
             });
-
-            long now = System.nanoTime();
-            System.out.println("Startup Time " + ((now - then)/1_000_000_000.0) + " s");
         } else {
 
             String str = params.get(0);
@@ -57,15 +54,12 @@ public class Kiwi extends Application {
                 node.build();
                 LinkedList<ImageNode> list = new LinkedList<>();
                 list.add(node);
-                Viewer controller = new Viewer(list, path);
+                Viewer controller = new Viewer(list, path, stage);
 
                 stage.setScene(new Scene(controller.component(),700, 700));
                 stage.setOnCloseRequest((e) -> {
                     controller.exit();
                 });
-
-                long now = System.nanoTime();
-                System.out.println("Startup Time " + ((now - then)/1_000_000_000.0) + " s");
             } else if (path.toString().endsWith(".tmp")) {
 
             	System.out.println("READING TEMP FILE");
@@ -91,7 +85,7 @@ public class Kiwi extends Application {
 
                 parameters.nodelist.forEach(in -> in.build());
 
-                Viewer controller = new Viewer(parameters.nodelist, initialPath);
+                Viewer controller = new Viewer(parameters.nodelist, initialPath, stage);
                 stage.setScene(new Scene(controller.component(),700, 700));
                 stage.setOnCloseRequest((e) -> {
                     controller.exit();

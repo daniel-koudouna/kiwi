@@ -18,6 +18,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 public class Viewer extends AbstractController {
 
@@ -39,9 +40,11 @@ public class Viewer extends AbstractController {
 
 	@FXML
 	public VBox chapters;
+	private Stage stage;
 
-	public Viewer(LinkedList<ImageNode> tree, Path initial) {
+	public Viewer(LinkedList<ImageNode> tree, Path initial, Stage stage) {
 		super();
+		this.stage = stage;
 		this.flatTree = tree;
 		this.current = new Dynamic<>(initial);
 
@@ -50,8 +53,6 @@ public class Viewer extends AbstractController {
 		}).findFirst();
 
 		this.currentBranch = new Dynamic<>(presentNode.orElseThrow(() -> new RuntimeException()));
-
-		System.out.println(this.currentBranch.get().getImages().count());
 	}
 
 	private void setImage(Path path) {
@@ -86,7 +87,7 @@ public class Viewer extends AbstractController {
 			this.currentBranch.update(getNext());
 			break;
 		case Q:
-			this.exit();
+			stage.close();
 			break;
 		default:
 			break;

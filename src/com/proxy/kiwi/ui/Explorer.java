@@ -31,21 +31,34 @@ import com.proxy.kiwi.tree.node.ImageNode;
 import com.proxy.kiwi.tree.node.Node;
 import com.proxy.kiwi.utils.TaskQueue;
 
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.TilePane;
+import javafx.stage.Stage;
 
 public class Explorer extends AbstractController {
     @FXML
     FlowPane filterPane;
     @FXML
-    TilePane tilePane;
+    FlowPane tilePane;
     @FXML
     TextField searchBox;
+    @FXML
+    GridPane topPane;
+    @FXML
+    Pane fillerPane;
+    @FXML
+    Pane scrollControl;
+    @FXML
+    Pane scrollBar;
+
     Tree root;
     Tile activeTile;
 
@@ -55,13 +68,17 @@ public class Explorer extends AbstractController {
 
     TaskQueue updateTask;
 
+    Stage stage;
+
     public static final int reqW = 200;
     public static final int reqH = 300;
     private List<TileComponent> tiles;
 
-    public Explorer(Tree root) {
+    public Explorer(Tree root, Stage stage) {
         super();
         this.root = root;
+        this.stage = stage;
+
         tiles = new ArrayList<>();
 
         rootFilter = Filter.or(Filter.parent(root));
@@ -77,29 +94,53 @@ public class Explorer extends AbstractController {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        tilePane.setPrefTileWidth(reqW);
-        tilePane.setPrefTileHeight(reqH);
-
         root.onEvent(this::handleEvent);
 
         Thread buildThread = new Thread( () -> {
             root.build();
             root.prune();
-            root.stream().forEach(n -> System.out.println(n.getPath()));
-
-            //try {
-            //    FileOutputStream fos = new FileOutputStream("test.txt");
-            //    ObjectOutputStream oos = new ObjectOutputStream(fos);
-
-            //    oos.writeObject(root);
-            //    oos.close();
-            //} catch (IOException e) {
-            //    e.printStackTrace();
-            //}
         });
 
         buildThread.start();
         searchBox.textProperty().addListener((obs, oldVal, newVal) -> onSearch(newVal));
+
+        fillerPane.prefWidthProperty().bind(topPane.widthProperty());
+        fillerPane.prefHeightProperty().bind(topPane.heightProperty());
+
+        ChangeListener<Number> stageSizeListener = (observable, prev, curr) -> {
+        	scroll();
+        };
+
+        stage.widthProperty().addListener(stageSizeListener);
+    }
+
+    private void translateYInBounds(Pane pane, double offset) {
+    	pane.setTranslateY(Math.min(0, Math.max(-pane.getBoundsInLocal().getHeight() + pane.getHeight(), offset)));
+    }
+
+    private void scroll() {
+    	double percent = -scrollControl.getTranslateY()/(scrollBar.getBoundsInLocal().getHeight());
+    	translateYInBounds(tilePane,percent*(tilePane.getBoundsInLocal().getHeight() + tilePane.getHeight()));
+    }
+
+    private void updateScrollComponent() {
+    	double percent = -tilePane.getTranslateY()/(tilePane.getBoundsInLocal().getHeight());
+    	scrollControl.setTranslateY(Math.max(0,Math.min(scrollBar.getHeight(), percent*scrollBar.getHeight())));
+    }
+
+    @FXML
+    public void onScrollControlDragged(MouseEvent event) {
+    	double y = event.getY();
+    	double delta = scrollControl.getHeight()/2.0 - y;
+    	scrollControl.setTranslateY(Math.max(0, Math.min(scrollBar.getHeight() - scrollControl.getHeight(), scrollControl.getTranslateY() - delta)));
+    	scroll();
+    }
+
+    @FXML
+    public void onScrollbarClick(MouseEvent event) {
+    	double pos = event.getY() - scrollControl.getHeight()/2.0;
+    	scrollControl.setTranslateY(Math.max(0, Math.min(scrollBar.getHeight() - scrollControl.getHeight(), pos)));
+    	scroll();
     }
 
     public synchronized void handleEvent(TreeEvent event) {
@@ -166,6 +207,21 @@ public class Explorer extends AbstractController {
 
     public void onMove(Tile tile) {
         onEnter(tile);
+    }
+
+    private void updateTilePane(double delta) {
+    	translateYInBounds(tilePane, tilePane.getTranslateY() + delta);
+    }
+
+    private void updateTilePane() {
+    	updateTilePane(0.0);
+    }
+
+    @FXML
+    public void onScroll(ScrollEvent event) {
+    	double y = 3.5*event.getDeltaY();
+    	updateTilePane(y);
+    	updateScrollComponent();
     }
 
     @FXML
@@ -280,6 +336,7 @@ public class Explorer extends AbstractController {
         updateTask.enqueue(() -> {
             root.stream().forEach(n -> n.status.update(filter.apply(n) ? NodeStatus.SHOW_SELF : NodeStatus.HIDE));
         });
+        tilePane.autosize();
     }
 
     @Override
