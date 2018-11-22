@@ -6,8 +6,10 @@ import java.io.ObjectInputStream;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 import com.proxy.kiwi.instancer.LaunchParameters;
 import com.proxy.kiwi.tree.Tree;
@@ -30,6 +32,8 @@ public class Kiwi extends Application {
     public void start(Stage stage) throws Exception{
         long then = System.nanoTime();
     	List<String> params = getParameters().getUnnamed();
+
+    	stage.setTitle("Kiwi");
 
         if (params.size() == 0) {
             Path rootPath = Paths.get("S:", "Cloud","Hens");
@@ -55,6 +59,23 @@ public class Kiwi extends Application {
                 LinkedList<ImageNode> list = new LinkedList<>();
                 list.add(node);
                 Viewer controller = new Viewer(list, path, stage);
+
+                stage.setScene(new Scene(controller.component(),700, 700));
+                stage.setOnCloseRequest((e) -> {
+                    controller.exit();
+                });
+            } else if (path.toFile().isDirectory()) {
+            	ImageNode node = new ImageNode(null,path);
+            	List<File> fs = Arrays.asList(path.toFile().listFiles());
+            	Optional<File> initial = fs.stream().filter(f -> Node.isImage(f.toPath())).findFirst();
+            	if (!initial.isPresent()) {
+                	System.out.println("Did not find valid images in directory " + path.toString() +". Exiting.");
+                	System.exit(0);
+            	}
+            	node.build();
+                LinkedList<ImageNode> list = new LinkedList<>();
+                list.add(node);
+                Viewer controller = new Viewer(list, initial.get().toPath(), stage);
 
                 stage.setScene(new Scene(controller.component(),700, 700));
                 stage.setOnCloseRequest((e) -> {
@@ -98,7 +119,6 @@ public class Kiwi extends Application {
             }
         }
 
-        stage.setTitle("Kiwi");
         stage.getScene().getStylesheets().add(Kiwi.resource("application.css").toString());
         stage.show();
 

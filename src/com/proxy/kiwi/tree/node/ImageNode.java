@@ -31,6 +31,7 @@ public class ImageNode extends Node{
             Files.list(getPath())
             	.filter(FolderNode::isImage)
             	.map(Path::toUri)
+            	.sorted(FileComparators.WINDOWS_LIKE)
             	.forEach(images::add);
         } catch (IOException e) {
             e.printStackTrace();

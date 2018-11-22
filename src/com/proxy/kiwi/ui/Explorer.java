@@ -256,7 +256,7 @@ public class Explorer extends AbstractController {
     		LinkedList<ImageNode> nodeList = new LinkedList<>();
 
     		root.stream()
-    			.filter(n -> n.status.get() == NodeStatus.SHOW_SELF)
+    			.filter(n -> n.status.get().show())
     			.filter(n -> n instanceof ImageNode)
     			.map(n -> ((ImageNode)n))
     			.forEach(nodeList::add);
@@ -334,7 +334,11 @@ public class Explorer extends AbstractController {
         AbstractFilter filter = Filter.of(allFilters);
 
         updateTask.enqueue(() -> {
-            root.stream().forEach(n -> n.status.update(filter.apply(n) ? NodeStatus.SHOW_SELF : NodeStatus.HIDE));
+            root.stream().forEach(n -> {
+            	boolean visible = filter.apply(n);
+            	boolean visibleChildren = n.getChildren().anyMatch(filter::apply);
+            	n.status.update(new NodeStatus(visible, visibleChildren));
+            });
         });
         tilePane.autosize();
     }

@@ -7,19 +7,34 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane fx:id="root" onMouseEntered="#onMouseEnter" onMouseExited="#onMouseExit" onMouseMoved="#onMove" onMouseReleased="#onClick" prefHeight="184.0" prefWidth="200.0" styleClass="tile" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
-   <children>
-      <ImageView fx:id="image" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER">
-         <viewport>
-            <Rectangle2D />
-         </viewport></ImageView>
-      <VBox fx:id="tileBox" maxHeight="-Infinity" maxWidth="1.7976931348623157E308" prefHeight="84.0" styleClass="tile-box" StackPane.alignment="BOTTOM_CENTER">
-         <children>
-            <Label fx:id="lblText" alignment="CENTER" contentDisplay="BOTTOM" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="16.0" text="Placeholder" textAlignment="CENTER" wrapText="true" VBox.vgrow="ALWAYS" />
-         </children>
-         <StackPane.margin>
-            <Insets />
-         </StackPane.margin>
-      </VBox>
-   </children>
+<StackPane fx:id="root" onMouseEntered="#onMouseEnter"
+	onMouseExited="#onMouseExit" onMouseMoved="#onMove" onMouseReleased="#onClick"
+	prefHeight="184.0" prefWidth="200.0" styleClass="tile"
+	xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1">
+	<children>
+		<ImageView fx:id="image" fitHeight="150.0" fitWidth="200.0"
+			pickOnBounds="true" preserveRatio="true" StackPane.alignment="CENTER">
+			<viewport>
+				<Rectangle2D />
+			</viewport>
+		</ImageView>
+		<VBox fx:id="tileBox" maxHeight="-Infinity" maxWidth="1.7976931348623157E308"
+			prefHeight="84.0" styleClass="tile-box" StackPane.alignment="BOTTOM_CENTER">
+			<children>
+				<Label fx:id="lblText" alignment="CENTER" contentDisplay="BOTTOM"
+					maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308"
+					prefHeight="16.0" text="Placeholder" textAlignment="CENTER"
+					wrapText="true" VBox.vgrow="ALWAYS" />
+			</children>
+			<StackPane.margin>
+				<Insets />
+			</StackPane.margin>
+		</VBox>
+		<ImageView fx:id="statusImage" fitHeight="50.0" fitWidth="50.0" translateX="-5.0" translateY="5.0"
+			pickOnBounds="false" preserveRatio="true" StackPane.alignment="TOP_RIGHT">
+			<viewport>
+				<Rectangle2D />
+			</viewport>
+		</ImageView>
+	</children>
 </StackPane>

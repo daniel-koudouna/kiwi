@@ -12,7 +12,6 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-
 <StackPane pickOnBounds="false" prefHeight="456.0" prefWidth="778.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <VBox prefHeight="200.0" prefWidth="100.0">
@@ -20,7 +19,7 @@
             <Pane fx:id="fillerPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" mouseTransparent="true" pickOnBounds="false" prefHeight="41.0" prefWidth="600.0" />
             <HBox onScroll="#onScroll" pickOnBounds="false" prefHeight="100.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
                <children>
-                  <FlowPane fx:id="tilePane" focusTraversable="true" maxHeight="1.7976931348623157E308" minHeight="0.0" pickOnBounds="false" HBox.hgrow="ALWAYS" />
+                  <FlowPane fx:id="tilePane" focusTraversable="true" maxHeight="1.7976931348623157E308" minHeight="0.0" onKeyReleased="#onKey" pickOnBounds="false" HBox.hgrow="ALWAYS" />
                   <Pane fx:id="scrollBar" maxHeight="1.7976931348623157E308" minWidth="-Infinity" onMouseClicked="#onScrollbarClick" pickOnBounds="false" prefHeight="200.0" prefWidth="20.0" scaleY="1.01" style="-fx-background-color: gray;">
                      <children>
                         <Pane fx:id="scrollControl" onMouseDragged="#onScrollControlDragged" prefHeight="40.0" prefWidth="20.0" style="-fx-background-color: white;" />

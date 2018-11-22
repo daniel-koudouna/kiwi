@@ -21,6 +21,13 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 
 public class Tile extends AbstractController{
+
+	static Image folderExpand, folderCollapse;
+	static {
+		folderExpand = new Image(Kiwi.resource("minus_small.png").toString());
+		folderCollapse = new Image(Kiwi.resource("plus_small.png").toString());
+	}
+
     @FXML
     ImageView image;
 
@@ -32,6 +39,9 @@ public class Tile extends AbstractController{
 
     @FXML
     Label lblText;
+
+    @FXML
+    ImageView statusImage;
 
     Node node;
 
@@ -115,30 +125,38 @@ public class Tile extends AbstractController{
     }
 
     private void update(NodeStatus status) {
-        switch (status) {
-            case SHOW_SELF:
-            case SHOW_CHILDREN:
-            	visible = true;
-                if (!hasLoadedImage) {
-                    hasLoadedImage = true;
-                    setImageWithDimensions();
-                } else {
-                	if (root.getOpacity() < 1) {
-                    	root.setDisable(false);
-                    	root.setMinSize(reqW, reqH);
-                    	root.setMaxSize(reqW, reqH);
-                    	root.setPrefSize(reqW, reqH);
-                		showRoot.play();
-                	}
-                }
-                break;
-            case HIDE:
-            	visible = false;
-            	if (root.getOpacity() > 0) {
-                   	hideRoot.play();
+    	if (status.show()) {
+        	if (this.node.hasChildren()) {
+        		if (status.children()) {
+                    statusImage.setImage(folderExpand);
+                    image.setOpacity(0.4);
+        		} else {
+                    statusImage.setImage(folderCollapse);
+                    image.setOpacity(1.0);
+        		}
+        	} else {
+                statusImage.setImage(null);
+        	}
+
+        	visible = true;
+            if (!hasLoadedImage) {
+                hasLoadedImage = true;
+                setImageWithDimensions();
+            } else {
+            	if (root.getOpacity() < 1) {
+                	root.setDisable(false);
+                	root.setMinSize(reqW, reqH);
+                	root.setMaxSize(reqW, reqH);
+                	root.setPrefSize(reqW, reqH);
+            		showRoot.play();
             	}
-                break;
-        }
+            }
+    	} else {
+        	visible = false;
+        	if (root.getOpacity() > 0) {
+               	hideRoot.play();
+        	}
+    	}
     }
 
     private void setImageWithDimensions() {

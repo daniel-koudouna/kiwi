@@ -2,6 +2,7 @@ package com.proxy.kiwi.tree.filter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import com.proxy.kiwi.tree.TreeNode;
 import com.proxy.kiwi.tree.node.Node;
@@ -22,7 +23,8 @@ public class Filter {
     }
 
     public static AbstractFilter name(String name) {
-        return new NamedFilter("name:" + name, (node -> node.getPath().getFileName().toString().contains(name)));
+    	Function<Node, Boolean> fn = (node -> node.getPath().getFileName().toString().toLowerCase().contains(name.toLowerCase()));
+        return new NamedFilter("name:" + name, (node -> fn.apply(node) || node.getChildren().anyMatch(fn::apply)));
     }
 
     public static AbstractFilter of(AbstractPipeFilter...filters) {

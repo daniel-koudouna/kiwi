@@ -1,9 +1,9 @@
 package com.proxy.kiwi.tree;
 
+import java.util.stream.Stream;
+
 import com.proxy.kiwi.tree.event.TreeEvent;
 import com.proxy.kiwi.tree.node.Node;
-
-import java.util.stream.Stream;
 
 public abstract class TreeNode {
     public TreeNode parent;
@@ -13,6 +13,10 @@ public abstract class TreeNode {
     public abstract void prune();
     public abstract boolean isEmpty();
     public abstract Stream<Node> getChildren();
+
+	public boolean hasChildren() {
+		return getChildren().count() > 0;
+	}
 
     public boolean hasParent(TreeNode parent) {
         return this.parent == parent || (this.parent != null && this.parent.hasParent(parent));

@@ -28,7 +28,7 @@ public abstract class Node extends TreeNode implements Comparable, Serializable 
             throw new NodeException("Tried to create node with non-existent path");
         }
         this.uri = path.toUri();
-        this.status = new Dynamic<>(NodeStatus.HIDE);
+        this.status = new Dynamic<>(new NodeStatus(false, false));
         this.built = false;
         buildImage();
     }
@@ -95,4 +95,5 @@ public abstract class Node extends TreeNode implements Comparable, Serializable 
     public Stream<Node> stream() {
         return Stream.of(this);
     }
+
 }
