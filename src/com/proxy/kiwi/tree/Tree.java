@@ -14,63 +14,70 @@ import java.util.stream.Stream;
 
 public class Tree extends TreeNode implements Serializable {
 
-    transient List<Consumer<TreeEvent>> callbacks;
-    List<Node> children;
+  /**
+   *
+   */
+  private static final long serialVersionUID = 1L;
+  transient List<Consumer<TreeEvent>> callbacks;
+  List<Node> children;
 
-    public Tree(Node...children) {
-        this.callbacks = new LinkedList<>();
-        this.children = Arrays.asList(children);
-        this.children.forEach(child -> child.parent = this);
+  public Tree(List<Node> children) {
+    this.callbacks = new LinkedList<>();
+    this.children = children;
+    this.children.forEach(child -> child.parent = this);
+  }
+
+  public Tree(Node...children) {
+    this(Arrays.asList(children));
+  }
+
+  public void onEvent(Consumer<TreeEvent> callback) {
+    this.callbacks.add(callback);
+  }
+
+  @Override
+  public void accept(TreeEvent event) {
+    children.forEach(c -> c.accept(event));
+  }
+
+  @Override
+  public void emit(TreeEvent event) {
+    callbacks.forEach(c -> c.accept(event));
+  }
+
+  @Override
+  public void prune() {
+    this.children.forEach(Node::prune);
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return children.isEmpty();
+  }
+
+  @Override
+  public Stream<Node> getChildren() {
+    return children.stream();
+  }
+
+  public Stream<Node> stream() {
+    return children.stream().flatMap(c -> c.stream());
+  }
+
+  public void build() {
+    LinkedList<Node> toBuild = new LinkedList<>();
+    toBuild.addAll(children);
+
+    onEvent(e -> {
+	if (e instanceof ChildAdded) {
+	  toBuild.add(((ChildAdded) e).child);
+	}
+      });
+
+    while (!toBuild.isEmpty()) {
+      Node node = toBuild.pop();
+      node.build();
     }
-
-    public void onEvent(Consumer<TreeEvent> callback) {
-        this.callbacks.add(callback);
-    }
-
-    @Override
-    public void accept(TreeEvent event) {
-       children.forEach(c -> c.accept(event));
-    }
-
-    @Override
-    public void emit(TreeEvent event) {
-        callbacks.forEach(c -> c.accept(event));
-    }
-
-    @Override
-    public void prune() {
-        this.children.forEach(Node::prune);
-    }
-
-    @Override
-    public boolean isEmpty() {
-        return children.isEmpty();
-    }
-
-    @Override
-    public Stream<Node> getChildren() {
-        return children.stream();
-    }
-
-    public Stream<Node> stream() {
-        return children.stream().flatMap(c -> c.stream());
-    }
-
-    public void build() {
-        LinkedList<Node> toBuild = new LinkedList<>();
-        toBuild.addAll(children);
-
-        onEvent(e -> {
-            if (e instanceof ChildAdded) {
-                toBuild.add(((ChildAdded) e).child);
-            }
-        });
-
-        while (!toBuild.isEmpty()) {
-            Node node = toBuild.pop();
-            node.build();
-        }
-
-        emit(new TreeBuilt(this));
-    }
+    emit(new TreeBuilt(this));
+  }
 }

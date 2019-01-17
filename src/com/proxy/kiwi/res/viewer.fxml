@@ -11,7 +11,7 @@
    <children>
       <Group fx:id="group">
          <children>
-            <ImageView fx:id="view" fitHeight="386.0" fitWidth="585.0" focusTraversable="true" onKeyPressed="#onKeyPress" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="view" fitHeight="386.0" fitWidth="585.0" focusTraversable="true" onKeyReleased="#onKeyUp" onKeyPressed="#onKeyPress" pickOnBounds="true" preserveRatio="true" />
          </children>
       </Group>
       <Label fx:id="pageNum" styleClass="text" text="0/0" StackPane.alignment="BOTTOM_RIGHT">

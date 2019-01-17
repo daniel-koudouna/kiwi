@@ -1,7 +1,12 @@
 package com.proxy.kiwi.tree.node;
 
 public class NodeException extends Exception {
-    public NodeException(String s) {
-        super(s);
-    }
+  /**
+   *
+   */
+  private static final long serialVersionUID = 1L;
+
+  public NodeException(String s) {
+    super(s);
+  }
 }

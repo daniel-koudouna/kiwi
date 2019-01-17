@@ -1,7 +1,6 @@
 package com.proxy.kiwi.instancer;
 
 import com.proxy.kiwi.tree.Tree;
-import javafx.stage.Stage;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -12,14 +11,9 @@ import java.util.List;
 public class InstanceManager extends IManager<Tree> {
 
     private List<File> tempFilesCreated;
-    private Stage stage;
 
     public InstanceManager() {
         tempFilesCreated = new LinkedList<>();
-    }
-
-    public void registerStage(Stage s) {
-        stage = s;
     }
 
     public void registerTempFile(File file) {

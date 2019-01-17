@@ -12,7 +12,8 @@ public abstract class IManager<T extends Serializable> {
      * to an appropriate data file.
      * @see IManager#wake(Serializable)
      */
-    public void sleep() {
+	@SuppressWarnings("unchecked")
+	public void sleep() {
         int i = findFreeIndex();
         if (i == -1) {
             return;

@@ -12,76 +12,89 @@ import java.util.stream.Stream;
 
 public class FolderNode extends Node {
 
-    public TreeSet<Node> children;
+  /**
+   *
+   */
+  private static final long serialVersionUID = 1L;
+  public TreeSet<Node> children;
 
-    public FolderNode(Node parent, Path path) throws NodeException {
-        super(parent,path);
-        children = new TreeSet<>();
+  public static Optional<FolderNode> optional(Path path) {
+    try {
+      return Optional.of(new FolderNode(null, path));
+    } catch (NodeException e) {
+      System.err.println("Error opening " + path);
+      return Optional.empty();
     }
+  }
 
-    @Override
-    protected void buildInternal() {
-        try {
-            Files.list(getPath()).sorted().forEach(this::handleDir);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+  public FolderNode(Node parent, Path path) throws NodeException {
+    super(parent,path);
+    children = new TreeSet<>();
+  }
 
-    private void handleDir(Path path) {
-        if (Files.isDirectory(path)) {
-            try {
-                boolean hasChildrenFolders = Files.list(path).anyMatch(Files::isDirectory);
-                if (hasChildrenFolders) {
-                    Node child = new FolderNode(this,path);
-                    children.add(child);
-                    emit(new ChildAdded(child,this,this.children.size()));
-                }
-                boolean hasChildrenImages = Files.list(path).anyMatch(FolderNode::isImage);
-                if (hasChildrenImages) {
-                    Node child = new ImageNode(this,path);
-                    children.add(child);
-                    emit(new ChildAdded(child,this,this.children.size()));
-                }
-            } catch (NodeException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+  @Override
+  protected void buildInternal() {
+    try {
+      Files.list(getPath()).sorted().forEach(this::handleDir);
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
 
-    @Override
-    public Stream<Node> stream() {
-        return Stream.concat(Stream.of(this), this.children.stream().flatMap(Node::stream));
+  private void handleDir(Path path) {
+    if (Files.isDirectory(path)) {
+      try {
+	boolean hasChildrenFolders = Files.list(path).anyMatch(Files::isDirectory);
+	if (hasChildrenFolders) {
+	  Node child = new FolderNode(this,path);
+	  children.add(child);
+	  emit(new ChildAdded(child,this,this.children.size()));
+	}
+	boolean hasChildrenImages = Files.list(path).anyMatch(FolderNode::isImage);
+	if (hasChildrenImages) {
+	  Node child = new ImageNode(this,path);
+	  children.add(child);
+	  emit(new ChildAdded(child,this,this.children.size()));
+	}
+      } catch (NodeException e) {
+	e.printStackTrace();
+      } catch (IOException e) {
+	e.printStackTrace();
+      }
     }
+  }
 
-    @Override
-    public void accept(TreeEvent event) {
-       children.forEach(c -> c.accept(event));
-    }
+  @Override
+  public Stream<Node> stream() {
+    return Stream.concat(Stream.of(this), this.children.stream().flatMap(Node::stream));
+  }
 
-    @Override
-    public void prune() {
-        children.forEach(TreeNode::prune);
-        for (Iterator<Node> iterator = children.iterator(); iterator.hasNext(); ) {
-            Node child = iterator.next();
-            if (child instanceof FolderNode) {
-                FolderNode folderNode = (FolderNode)child;
-                if (folderNode.children.size() == 1) {
-                    //System.out.println(folderNode.path + " has one child");
-                }
-            }
-        }
-    }
+  @Override
+  public void accept(TreeEvent event) {
+    children.forEach(c -> c.accept(event));
+  }
 
-    @Override
-    public boolean isEmpty() {
-        return children.isEmpty();
+  @Override
+  public void prune() {
+    children.forEach(TreeNode::prune);
+    for (Iterator<Node> iterator = children.iterator(); iterator.hasNext(); ) {
+      Node child = iterator.next();
+      if (child instanceof FolderNode) {
+	FolderNode folderNode = (FolderNode)child;
+	if (folderNode.children.size() == 1) {
+	  //System.out.println(folderNode.path + " has one child");
+	}
+      }
     }
+  }
 
-    @Override
-    public Stream<Node> getChildren() {
-        return children.stream();
-    }
+  @Override
+  public boolean isEmpty() {
+    return children.isEmpty();
+  }
+
+  @Override
+  public Stream<Node> getChildren() {
+    return children.stream();
+  }
 }
