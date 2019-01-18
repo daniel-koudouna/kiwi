@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
 
+import com.proxy.kiwi.utils.Logger;
 import com.proxy.kiwi.utils.Tuple;
 
 import javafx.scene.image.Image;
@@ -77,12 +78,7 @@ public class ImageCache {
       .findFirst();
   }
 
-  public String toString() {
-    return
-      "Cache:" +
-      cache.stream()
-      .map(t -> t.x)
-      .map(Path::toString)
-      .reduce("", (a,b) -> a + "\n" + b);
+  public void show() {
+    Logger.stream(cache, "Cache");
   }
 }

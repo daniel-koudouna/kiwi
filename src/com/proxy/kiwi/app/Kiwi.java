@@ -24,6 +24,25 @@ public class Kiwi extends Application {
     return Kiwi.class.getResource("/com/proxy/kiwi/res/" + path);
   }
 
+  private Optional<LaunchParameters> readParams(Path path) {
+    LaunchParameters parameters = null;
+    try {
+      File infile = path.toFile();
+      FileInputStream fis = new FileInputStream(infile);
+      ObjectInputStream ois = new ObjectInputStream(fis);
+      parameters = (LaunchParameters) ois.readObject();
+      ois.close();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    } catch (FileNotFoundException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
+    return Optional.ofNullable(parameters);
+  }
 
 
   private Optional<AbstractController> getController(Stage stage, Configuration config) {
@@ -31,31 +50,12 @@ public class Kiwi extends Application {
     if (params.size() == 1 && params.get(0).endsWith(".tmp")) {
       System.out.println("READING TEMP FILE");
 
-      LaunchParameters parameters = null;
-      try {
-	File infile = Paths.get(params.get(0)).toFile();
-	FileInputStream fis = new FileInputStream(infile);
-	ObjectInputStream ois = new ObjectInputStream(fis);
-	parameters = (LaunchParameters) ois.readObject();
-	ois.close();
-      } catch (ClassNotFoundException e) {
-	e.printStackTrace();
-      } catch (FileNotFoundException e) {
-	// TODO Auto-generated catch block
-	e.printStackTrace();
-      } catch (IOException e) {
-	// TODO Auto-generated catch block
-	e.printStackTrace();
-      }
-
-      if (parameters == null) {
-	System.out.println("Could not read parameters. Exiting.");
-	return Optional.empty();
-      }
-
-      Path initialPath = Paths.get(parameters.initial);
-      parameters.nodelist.forEach(in -> in.build());
-      return Optional.of(new Viewer(parameters.nodelist, initialPath, stage, config));
+      return readParams(Paths.get(params.get(0)))
+	.map(parameters -> {
+	    Path initialPath = Paths.get(parameters.initial);
+	    parameters.nodelist.forEach(in -> in.build());
+	    return new Viewer(parameters.nodelist, initialPath, stage, config);
+	  });
     } else {
       return Parameter.controller(stage,params,config);
     }

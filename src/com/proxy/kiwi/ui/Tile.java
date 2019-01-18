@@ -22,234 +22,234 @@ import javafx.util.Duration;
 
 public class Tile extends AbstractController{
 
-	static Image folderExpand, folderCollapse;
-	static {
-		folderExpand = new Image(Kiwi.resource("minus_small.png").toString());
-		folderCollapse = new Image(Kiwi.resource("plus_small.png").toString());
+  static Image folderExpanded, folderCollapsed;
+  static {
+    folderExpanded = new Image(Kiwi.resource("minus_small.png").toString());
+    folderCollapsed = new Image(Kiwi.resource("plus_small.png").toString());
+  }
+
+  @FXML
+  ImageView image;
+
+  @FXML
+  StackPane root;
+
+  @FXML
+  VBox tileBox;
+
+  @FXML
+  Label lblText;
+
+  @FXML
+  ImageView statusImage;
+
+  Node node;
+
+  FadeTransition showTileBox, hideTileBox;
+
+  boolean hasLoadedImage;
+  private final Explorer parent;
+
+  private boolean visible;
+
+  private int reqW;
+
+  private int reqH;
+
+  private FadeTransition showRoot;
+
+  private FadeTransition hideRoot;
+
+  static final Image LOADING_IMAGE;
+
+  static {
+    LOADING_IMAGE = new Image(Kiwi.resource("loading.gif").toString());
+  }
+
+  public Tile(Explorer parent, Node node) {
+    super();
+    this.parent = parent;
+    this.node = node;
+    hasLoadedImage = false;
+  }
+
+  @Override
+  public void initialize(URL location, ResourceBundle resources) {
+    reqW = Explorer.reqW;
+    reqH = Explorer.reqH;
+
+    root.prefWidthProperty().set(reqW);
+    root.prefHeightProperty().set(reqH);
+
+    image.fitWidthProperty().bind(root.widthProperty());
+    image.fitHeightProperty().bind(root.heightProperty());
+    image.setImage(LOADING_IMAGE);
+    image.scaleXProperty().set(0.2f);
+    image.scaleYProperty().set(0.2f);
+
+    tileBox.prefHeightProperty().bind(root.heightProperty().multiply(0.25));
+    lblText.setText(node.getPath().getFileName().toString());
+
+    float duration = 0.25f;
+
+    showTileBox = new FadeTransition();
+    showTileBox.setNode(tileBox);
+    showTileBox.setDuration(Duration.seconds(duration));
+    showTileBox.setFromValue(0);
+    showTileBox.setToValue(1);
+
+    hideTileBox = new FadeTransition();
+    hideTileBox.setNode(tileBox);
+    hideTileBox.setDuration(Duration.seconds(duration));
+    hideTileBox.setFromValue(1);
+    hideTileBox.setToValue(0);
+    tileBox.setOpacity(0);
+
+    showRoot = new FadeTransition(Duration.seconds(duration), root);
+    showRoot.setFromValue(0);
+    showRoot.setToValue(1);
+
+    hideRoot = new FadeTransition(Duration.seconds(duration), root);
+    hideRoot.setFromValue(1);
+    hideRoot.setToValue(0);
+    hideRoot.setOnFinished(e -> {
+	root.setDisable(true);
+	root.setMinSize(0, 0);
+	root.setMaxSize(0, 0);
+	root.setPrefSize(0, 0);
+      });
+
+    node.status.onChange(this::update);
+    root.setOpacity(0.0);
+    update(node.status.get());
+  }
+
+  private void update(NodeStatus status) {
+    if (status.show()) {
+      if (this.node.hasChildren()) {
+	if (status.children()) {
+	  statusImage.setImage(folderExpanded);
+	  image.setOpacity(0.4);
+	} else {
+	  statusImage.setImage(folderCollapsed);
+	  image.setOpacity(1.0);
 	}
+      } else {
+	statusImage.setImage(null);
+      }
 
-    @FXML
-    ImageView image;
+      visible = true;
+      if (!hasLoadedImage) {
+	hasLoadedImage = true;
+	setImageWithDimensions();
+      } else {
+	if (root.getOpacity() < 1) {
+	  root.setDisable(false);
+	  root.setMinSize(reqW, reqH);
+	  root.setMaxSize(reqW, reqH);
+	  root.setPrefSize(reqW, reqH);
+	  showRoot.play();
+	}
+      }
+    } else {
+      visible = false;
+      if (root.getOpacity() > 0) {
+	hideRoot.play();
+      }
+    }
+  }
 
-    @FXML
-    StackPane root;
+  private void setImageWithDimensions() {
+    int reqW = Explorer.reqW;
+    int reqH = Explorer.reqH;
 
-    @FXML
-    VBox tileBox;
+    double ratio = reqW/(reqH*1.0);
 
-    @FXML
-    Label lblText;
+    if (node.imagePath == null) {
+      //System.out.println(node.path + " has no image path");
+    } else {
+      KMetadata data = new KMetadata(node.imagePathRaw);
+      KImage im;
+      if (data.width == 0 || data.height == 0) {
+	im = new KImage(node.imagePath,reqW,-1,true,true,true);
+      } else {
+	int imW = data.width;
+	int imH = data.height;
+	double imRatio = imW/(imH*1.0);
 
-    @FXML
-    ImageView statusImage;
+	double sf;
 
-    Node node;
+	if (imRatio > ratio) {
+	  sf = reqH / (1.0*imH);
+	} else {
+	  sf = reqW / (1.0*imW);
+	}
+	sf += 0.001;
 
-    FadeTransition showTileBox, hideTileBox;
+	im = new KImage(node.imagePath,sf*imW,sf*imH,true,true,true);
+      }
+      image.setImage(im);
+      image.setViewport(new Rectangle2D(0,0,reqW,reqH));
+      image.scaleXProperty().set(1.0);
+      image.scaleYProperty().set(1.0);
+    }
+    Platform.runLater(() -> {
+	showRoot.play();
+      });
+  }
 
-    boolean hasLoadedImage;
-    private final Explorer parent;
 
-    private boolean visible;
+  @Override
+  protected String path() {
+    return "tile.fxml";
+  }
 
-	private int reqW;
 
-	private int reqH;
+  @FXML public void onMouseEnter() {
+    parent.onEnter(this);
+  }
 
-	private FadeTransition showRoot;
+  @FXML public void onMouseExit() {
+    parent.onExit(this);
+  }
 
-	private FadeTransition hideRoot;
+  @FXML public void onMove() {
+    parent.onMove(this);
+  }
 
-    static final Image LOADING_IMAGE;
+  @FXML public void onClick() {
+    parent.onClick(this);
+  }
 
-    static {
-        LOADING_IMAGE = new Image(Kiwi.resource("loading.gif").toString());
+  public boolean isVisible() {
+    return visible;
+  }
+
+  public void show() {
+    if (tileBox == null) {
+      return;
     }
 
-    public Tile(Explorer parent, Node node) {
-        super();
-        this.parent = parent;
-        this.node = node;
-        hasLoadedImage = false;
+    if (tileBox.getOpacity() < 1) {
+      //showTileBox.setFromValue(tileBox.getOpacity());
+      showTileBox.play();
+    }
+  }
+
+  public void hide() {
+    if (tileBox == null) {
+      return;
     }
 
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-        reqW = Explorer.reqW;
-        reqH = Explorer.reqH;
-
-        root.prefWidthProperty().set(reqW);
-        root.prefHeightProperty().set(reqH);
-
-        image.fitWidthProperty().bind(root.widthProperty());
-        image.fitHeightProperty().bind(root.heightProperty());
-        image.setImage(LOADING_IMAGE);
-        image.scaleXProperty().set(0.2f);
-        image.scaleYProperty().set(0.2f);
-
-        tileBox.prefHeightProperty().bind(root.heightProperty().multiply(0.25));
-        lblText.setText(node.getPath().getFileName().toString());
-
-        float duration = 0.25f;
-
-        showTileBox = new FadeTransition();
-        showTileBox.setNode(tileBox);
-        showTileBox.setDuration(Duration.seconds(duration));
-        showTileBox.setFromValue(0);
-        showTileBox.setToValue(1);
-
-        hideTileBox = new FadeTransition();
-        hideTileBox.setNode(tileBox);
-        hideTileBox.setDuration(Duration.seconds(duration));
-        hideTileBox.setFromValue(1);
-        hideTileBox.setToValue(0);
-        tileBox.setOpacity(0);
-
-        showRoot = new FadeTransition(Duration.seconds(duration), root);
-        showRoot.setFromValue(0);
-        showRoot.setToValue(1);
-
-        hideRoot = new FadeTransition(Duration.seconds(duration), root);
-        hideRoot.setFromValue(1);
-        hideRoot.setToValue(0);
-        hideRoot.setOnFinished(e -> {
-        	root.setDisable(true);
-        	root.setMinSize(0, 0);
-        	root.setMaxSize(0, 0);
-        	root.setPrefSize(0, 0);
-        });
-
-        node.status.onChange(this::update);
-        root.setOpacity(0.0);
-        update(node.status.get());
+    if (tileBox.getOpacity() > 0) {
+      /*
+       * TODO
+       * UX decision whether or not to start
+       * from current opacity. Looks not sharp
+       * enough without full transition.
+       */
+      //hideTileBox.setFromValue(tileBox.getOpacity());
+      hideTileBox.play();
     }
-
-    private void update(NodeStatus status) {
-    	if (status.show()) {
-        	if (this.node.hasChildren()) {
-        		if (status.children()) {
-                    statusImage.setImage(folderExpand);
-                    image.setOpacity(0.4);
-        		} else {
-                    statusImage.setImage(folderCollapse);
-                    image.setOpacity(1.0);
-        		}
-        	} else {
-                statusImage.setImage(null);
-        	}
-
-        	visible = true;
-            if (!hasLoadedImage) {
-                hasLoadedImage = true;
-                setImageWithDimensions();
-            } else {
-            	if (root.getOpacity() < 1) {
-                	root.setDisable(false);
-                	root.setMinSize(reqW, reqH);
-                	root.setMaxSize(reqW, reqH);
-                	root.setPrefSize(reqW, reqH);
-            		showRoot.play();
-            	}
-            }
-    	} else {
-        	visible = false;
-        	if (root.getOpacity() > 0) {
-               	hideRoot.play();
-        	}
-    	}
-    }
-
-    private void setImageWithDimensions() {
-        int reqW = Explorer.reqW;
-        int reqH = Explorer.reqH;
-
-        double ratio = reqW/(reqH*1.0);
-
-        if (node.imagePath == null) {
-            //System.out.println(node.path + " has no image path");
-        } else {
-            KMetadata data = new KMetadata(node.imagePathRaw);
-            KImage im;
-            if (data.width == 0 || data.height == 0) {
-                im = new KImage(node.imagePath,reqW,-1,true,true,true);
-            } else {
-                int imW = data.width;
-                int imH = data.height;
-                double imRatio = imW/(imH*1.0);
-
-                double sf;
-
-                if (imRatio > ratio) {
-                    sf = reqH / (1.0*imH);
-                } else {
-                    sf = reqW / (1.0*imW);
-                }
-                sf += 0.001;
-
-                im = new KImage(node.imagePath,sf*imW,sf*imH,true,true,true);
-            }
-            image.setImage(im);
-            image.setViewport(new Rectangle2D(0,0,reqW,reqH));
-            image.scaleXProperty().set(1.0);
-            image.scaleYProperty().set(1.0);
-        }
-        Platform.runLater(() -> {
-            showRoot.play();
-        });
-    }
-
-
-    @Override
-    protected String path() {
-        return "tile.fxml";
-    }
-
-
-    @FXML public void onMouseEnter() {
-        parent.onEnter(this);
-    }
-
-    @FXML public void onMouseExit() {
-        parent.onExit(this);
-    }
-
-    @FXML public void onMove() {
-        parent.onMove(this);
-    }
-
-    @FXML public void onClick() {
-        parent.onClick(this);
-    }
-
-    public boolean isVisible() {
-    	return visible;
-    }
-
-    public void show() {
-        if (tileBox == null) {
-            return;
-        }
-
-        if (tileBox.getOpacity() < 1) {
-            //showTileBox.setFromValue(tileBox.getOpacity());
-            showTileBox.play();
-        }
-    }
-
-    public void hide() {
-        if (tileBox == null) {
-            return;
-        }
-
-        if (tileBox.getOpacity() > 0) {
-            /*
-             * TODO
-             * UX decision whether or not to start
-             * from current opacity. Looks not sharp
-             * enough without full transition.
-             */
-            //hideTileBox.setFromValue(tileBox.getOpacity());
-            hideTileBox.play();
-        }
-    }
+  }
 }

@@ -75,7 +75,7 @@ public class Parameter {
     }
     boolean isImageNode = Arrays.stream(path.toFile().listFiles())
       .map(File::toPath)
-      .anyMatch(Node::isImage);
+      .allMatch(Node::isImage);
     if (isImageNode) {
       return Parameter.imageNode(path);
     }

@@ -15,12 +15,25 @@ public class Filter {
     return new NamedFilter("tag:" + tag , (node -> false));
   }
 
+  public static AbstractFilter path(List<TreeNode> nodes) {
+    return new NamedFilter("path:" + nodes, (node -> {
+	  TreeNode parent = node.parent;
+	  while (parent != null) {
+	    if (!nodes.contains(parent)) {
+	      return false;
+	    }
+	    parent = parent.parent;
+	  }
+	  return true;
+	}));
+  }
+
   public static AbstractFilter in(TreeNode parent) {
-    return new NamedFilter("in:" + parent.toString(), (node -> node.hasParent(parent)));
+    return new NamedFilter("in:" + parent.toString(), (node -> node.hasDirectParent(parent)));
   }
 
   public static AbstractFilter root() {
-    return (node -> {
+    return new NamedFilter("root!", node -> {
 	return (node.parent instanceof Tree) ||
 	  (node.parent.parent != null && node.parent.parent instanceof Tree);
       });
@@ -31,8 +44,11 @@ public class Filter {
   }
 
   public static AbstractFilter name(String name) {
-    Function<Node, Boolean> fn = (node -> node.getPath().getFileName().toString().toLowerCase().contains(name.toLowerCase()));
-    return new NamedFilter("name:" + name, (node -> fn.apply(node) || node.getChildren().anyMatch(fn::apply)));
+    Function<Node, String> sanitize = (node -> node.getPath().getFileName().toString().toLowerCase());
+    Function<Node, Boolean> fn = (node -> {
+	return node.stream().anyMatch(n -> sanitize.apply(n).contains(name.toLowerCase()));
+      });
+    return new NamedFilter("name:" + name, fn::apply);
   }
 
   public static AbstractFilter of(AbstractPipeFilter...filters) {
@@ -50,13 +66,13 @@ public class Filter {
   }
 
   public static AbstractPipeFilter or(AbstractFilter filter) {
-    return new NamedPipeFilter(filter.toString(), t -> {
+    return new NamedPipeFilter("|| " + filter.toString(), t -> {
 	return new Tuple<Node,Boolean>(t.x,t.y || filter.apply(t.x));
     });
   }
 
   public static AbstractPipeFilter and(AbstractFilter filter) {
-    return new NamedPipeFilter(filter.toString(), t -> {
+    return new NamedPipeFilter("&& " + filter.toString(), t -> {
 	return new Tuple<Node,Boolean>(t.x,t.y && filter.apply(t.x));
     });
   }

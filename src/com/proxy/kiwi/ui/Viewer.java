@@ -191,7 +191,7 @@ public class Viewer extends AbstractController {
       view.setScaleY(view.getScaleY() - 0.1);
       break;
     case C:
-      System.out.println(cache);
+      cache.show();
       break;
     case X:
       stage.close();

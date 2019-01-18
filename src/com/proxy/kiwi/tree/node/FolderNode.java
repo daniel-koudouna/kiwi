@@ -35,8 +35,15 @@ public class FolderNode extends Node {
   @Override
   protected void buildInternal() {
     try {
+      if (Files.list(getPath()).anyMatch(Node::isImage)) {
+	Node self = new ImageNode(this,getPath());
+	children.add(self);
+	emit(new ChildAdded(self,this,0));
+      }
       Files.list(getPath()).sorted().forEach(this::handleDir);
     } catch (IOException e) {
+      e.printStackTrace();
+    } catch (NodeException e) {
       e.printStackTrace();
     }
   }

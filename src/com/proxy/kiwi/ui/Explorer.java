@@ -20,6 +20,7 @@ import org.apache.tools.ant.util.JavaEnvUtils;
 import com.proxy.kiwi.app.Kiwi;
 import com.proxy.kiwi.instancer.LaunchParameters;
 import com.proxy.kiwi.tree.Tree;
+import com.proxy.kiwi.tree.TreeNode;
 import com.proxy.kiwi.tree.event.ChildAdded;
 import com.proxy.kiwi.tree.event.TreeBuilt;
 import com.proxy.kiwi.tree.event.TreeEvent;
@@ -29,6 +30,7 @@ import com.proxy.kiwi.tree.filter.Filter;
 import com.proxy.kiwi.tree.filter.NodeStatus;
 import com.proxy.kiwi.tree.node.ImageNode;
 import com.proxy.kiwi.tree.node.Node;
+import com.proxy.kiwi.utils.Logger;
 import com.proxy.kiwi.utils.TaskQueue;
 
 import javafx.beans.value.ChangeListener;
@@ -66,6 +68,8 @@ public class Explorer extends AbstractController {
   Optional<AbstractPipeFilter> queryFilter;
   List<AbstractPipeFilter> activeFilters;
 
+  List<TreeNode> pathNodes;
+
   TaskQueue updateTask;
 
   Stage stage;
@@ -79,6 +83,7 @@ public class Explorer extends AbstractController {
     this.root = root;
     this.stage = stage;
 
+    pathNodes = new ArrayList<>();
     tiles = new ArrayList<>();
 
     rootFilter = Filter.or(Filter.root());
@@ -99,6 +104,9 @@ public class Explorer extends AbstractController {
     Thread buildThread = new Thread( () -> {
 	root.build();
 	root.prune();
+
+	pathNodes.add(root);
+	root.getChildren().forEach(pathNodes::add);
       });
 
     buildThread.start();
@@ -296,15 +304,13 @@ public class Explorer extends AbstractController {
       return;
     }
 
-    AbstractPipeFilter filter = Filter.or(Filter.in(tile.node));
-
-    activeFilters.forEach(f -> System.out.println(f));
-
-    if (activeFilters.contains(filter)) {
-      activeFilters.remove(filter);
+    Node n = tile.node;
+    if (pathNodes.contains(n)) {
+      pathNodes.remove(n);
     } else {
-      activeFilters.add(filter);
+      pathNodes.add(n);
     }
+
     updateView();
   }
 
@@ -320,12 +326,16 @@ public class Explorer extends AbstractController {
 
   private void updateView() {
     LinkedList<AbstractPipeFilter> allFilters = new LinkedList<>();
-    allFilters.add(rootFilter);
-    allFilters.addAll(activeFilters);
+    // allFilters.add(rootFilter);
+    allFilters.add(Filter.or(Filter.path(pathNodes)));
+    // allFilters.addAll(activeFilters);
     queryFilter.ifPresent(allFilters::add);
-    if (activeFilters.isEmpty()) {
-      allFilters.add(tempRootFilter);
-    }
+
+    // if (activeFilters.isEmpty()) {
+    //   allFilters.add(tempRootFilter);
+    // }
+
+    Logger.stream(allFilters, "Filters");
 
     AbstractFilter filter = Filter.of(allFilters);
 
