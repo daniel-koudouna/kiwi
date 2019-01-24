@@ -33,11 +33,11 @@ OutputBaseFilename="{#name}-setup"
 Compression=lzma
 SolidCompression=yes
 PrivilegesRequired=admin
-SetupIconFile={#res}\Kiwi.ico
-UninstallDisplayIcon={app}\Kiwi.ico
+;SetupIconFile={app}\package\windows\Kiwi.ico
+;UninstallDisplayIcon={app}\package\windows\Kiwi.ico
 UninstallDisplayName=Kiwi
 WizardImageStretch=No
-WizardSmallImageFile={#res}\Kiwi-setup-icon.bmp   
+;WizardSmallImageFile={app}\package\windows\Kiwi-setup-icon.bmp
 ArchitecturesInstallIn64BitMode=x64
 
 [Tasks]
@@ -47,7 +47,7 @@ Name: Association; Description: "Associate image file extensions ('.jpg','.png')
 Root: HKCR; Subkey: ".jpg"; ValueData: "{#name}"; Flags: uninsdeletevalue; ValueType: string;  ValueName: "" ; Tasks: Association
 Root: HKCR; Subkey: ".png"; ValueData: "{#name}"; Flags: uninsdeletevalue; ValueType: string;  ValueName: "" ; Tasks: Association
 Root: HKCR; Subkey: "{#name}"; ValueData: "{#name} Compatible File"; Flags: uninsdeletekey; ValueType: string;  ValueName: ""
-Root: HKCR; Subkey: "{#name}\DefaultIcon"; ValueData: "{app}\{#name}.exe,0"; ValueType: string;  ValueName: ""
+;;; Root: HKCR; Subkey: "{#name}\DefaultIcon"; ValueData: "{app}\{#name}.exe,0"; ValueType: string;  ValueName: ""
 Root: HKCR; Subkey: "{#name}\shell\open\command"; ValueData: """{app}\{#name}.exe"" ""%1""";  ValueType: string;  ValueName: ""
 
 Root: HKCR; Subkey: "Applications\{#name}.exe"; ValueData: "Kiwi - A Lightweight Image Viewer";  ValueType: string;  ValueName: "FriendlyAppName"
@@ -68,11 +68,11 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "dist\kiwi.exe"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Components: program;
-Source: "{#res}\Kiwi.ico"; DestDir: "{app}"; Components: program;
+;; Source: "{#res}\Kiwi.ico"; DestDir: "{app}"; Components: program;
 
-[Icons]
-Name: "{group}\Kiwi"; Filename: "{app}\Kiwi.exe"; IconFilename: "{app}\Kiwi.ico"; Components: group;
-Name: "{commondesktop}\Kiwi"; Filename: "{app}\Kiwi.exe";  IconFilename: "{app}\Kiwi.ico"; Components: icon;
+;; [Icons]
+;; Name: "{group}\Kiwi"; Filename: "{app}\Kiwi.exe"; IconFilename: "{app}\Kiwi.ico"; Components: group;
+;; Name: "{commondesktop}\Kiwi"; Filename: "{app}\Kiwi.exe";  IconFilename: "{app}\Kiwi.ico"; Components: icon;
 
 
 [Run]
@@ -99,6 +99,6 @@ begin
 // Possible future improvements:
 //   if version less or same => just launch app
 //   if upgrade => check if same app is running and wait for it to exit
-//   Add pack200/unpack200 support? 
+//   Add pack200/unpack200 support?
   Result := True;
-end;  
+end;

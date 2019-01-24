@@ -79,6 +79,6 @@ public class ImageCache {
   }
 
   public void show() {
-    Logger.stream(cache, "Cache");
+    Logger.stream(cache.stream().map(t -> t.x), "Cache");
   }
 }

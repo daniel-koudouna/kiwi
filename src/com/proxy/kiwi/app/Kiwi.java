@@ -77,6 +77,7 @@ public class Kiwi extends Application {
     AbstractController controller = c.get();
     stage.setScene(new Scene(controller.component(),700, 700));
     stage.setOnCloseRequest((e) -> {
+	configuration.save();
 	controller.exit();
       });
 

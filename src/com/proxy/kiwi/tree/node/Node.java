@@ -99,5 +99,4 @@ public abstract class Node extends TreeNode implements Comparable<Object>, Seria
   public Stream<Node> stream() {
     return Stream.of(this);
   }
-
 }

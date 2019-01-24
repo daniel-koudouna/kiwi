@@ -3,6 +3,7 @@ package com.proxy.kiwi.app;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -73,6 +74,11 @@ public class Parameter {
     if (Node.isImage(path)) {
       return Parameter.imageNode(path.getParent(), path);
     }
+
+    if (!Files.isDirectory(path)) {
+      return Parameter.empty();
+    }
+
     boolean isImageNode = Arrays.stream(path.toFile().listFiles())
       .map(File::toPath)
       .allMatch(Node::isImage);

@@ -58,10 +58,13 @@ public class Viewer extends AbstractController {
 
   private boolean downPressed, upPressed;
 
+  private Configuration config;
+
   public Viewer(List<ImageNode> tree, Path initial, Stage stage, Configuration config) {
     super();
     this.stage = stage;
     this.flatTree = tree;
+    this.config = config;
     this.current = new Dynamic<>(initial);
     this.timeline = new Timeline();
 
@@ -123,7 +126,7 @@ public class Viewer extends AbstractController {
     return getDelta(-1);
   }
   private ImageNode getNext() {
-      return getDelta(1);
+    return getDelta(1);
   }
 
   private ImageNode getDelta(int delta) {
@@ -133,12 +136,10 @@ public class Viewer extends AbstractController {
 
   @FXML
   public void onKeyUp(KeyEvent e) {
-    switch (e.getCode()) {
-    case W:
+    switch (config.actionFor(e.getCode())) {
     case UP:
       this.upPressed = false;
       break;
-    case S:
     case DOWN:
       this.downPressed = false;
       break;
@@ -149,52 +150,51 @@ public class Viewer extends AbstractController {
 
   @FXML
   public void onKeyPress(KeyEvent e) {
-    switch (e.getCode()) {
-    case A:
-    case J:
+    switch (config.actionFor(e.getCode())) {
+    case EXIT:
+      stage.close();
+      break;
+    case FULL_SCREEN:
+      this.stage.setFullScreenExitHint("Press ESC or F to exit.");
+      this.stage.setFullScreen(!this.stage.isFullScreen());
+      break;
     case LEFT:
       this.current.update(currentBranch.get().before(this.current.get()));
       this.idleTimeline.stop();
       this.idleTimeline.play();
       break;
-    case D:
-    case K:
     case RIGHT:
       this.current.update(currentBranch.get().after(this.current.get()));
       this.idleTimeline.stop();
       this.idleTimeline.play();
       break;
-    case H:
+    case PREVIOUS:
       this.currentBranch.update(getPrevious());
       break;
-    case L:
+    case NEXT:
       this.currentBranch.update(getNext());
       break;
-    case F:
-      this.stage.setFullScreenExitHint("Press ESC or F to exit full-screen mode.");
-      this.stage.setFullScreen(!this.stage.isFullScreen());
-      break;
-    case W:
     case UP:
       this.upPressed = true;
       break;
-    case S:
     case DOWN:
       this.downPressed = true;
       break;
-    case EQUALS:
+    case ZOOM_IN:
       view.setScaleX(view.getScaleX() + 0.1);
       view.setScaleY(view.getScaleY() + 0.1);
       break;
-    case MINUS:
+    case ZOOM_OUT:
       view.setScaleX(view.getScaleX() - 0.1);
       view.setScaleY(view.getScaleY() - 0.1);
       break;
+    default:
+      break;
+    }
+
+    switch (e.getCode()) {
     case C:
       cache.show();
-      break;
-    case X:
-      stage.close();
       break;
     default:
       break;
