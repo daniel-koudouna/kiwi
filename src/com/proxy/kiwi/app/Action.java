@@ -10,5 +10,7 @@ public enum Action {
   PREVIOUS,
   NEXT,
   ZOOM_IN,
-  ZOOM_OUT, NONE
+  ZOOM_OUT,
+  MINIMIZE,
+  NONE
 }

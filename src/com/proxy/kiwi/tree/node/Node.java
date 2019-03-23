@@ -25,6 +25,7 @@ public abstract class Node extends TreeNode implements Comparable<Object>, Seria
   public Dynamic<NodeStatus> status;
   boolean built;
   public String imagePathRaw;
+  public String name;
 
   public Node(TreeNode parent, Path path) throws NodeException {
     this.parent = parent;
@@ -33,6 +34,7 @@ public abstract class Node extends TreeNode implements Comparable<Object>, Seria
     }
     this.uri = path.toUri();
     this.status = new Dynamic<>(new NodeStatus(false, false));
+    this.name = this.getPath().getFileName().toString();
     this.built = false;
     buildImage();
   }
@@ -82,10 +84,15 @@ public abstract class Node extends TreeNode implements Comparable<Object>, Seria
     }
   }
 
-  @Override
-  public String toString() {
-    return getPath().getFileName().toString();
-  }
+
+    public void setName(String name) {
+    	this.name = name;
+    }
+
+    @Override
+	public String toString() {
+    	return this.name;
+    }
 
   public Path getPath() {
     return Paths.get(uri);

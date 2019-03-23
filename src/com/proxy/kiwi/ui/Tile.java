@@ -73,56 +73,56 @@ public class Tile extends AbstractController{
     hasLoadedImage = false;
   }
 
-  @Override
-  public void initialize(URL location, ResourceBundle resources) {
-    reqW = Explorer.reqW;
-    reqH = Explorer.reqH;
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        reqW = Explorer.reqW;
+        reqH = Explorer.reqH;
 
-    root.prefWidthProperty().set(reqW);
-    root.prefHeightProperty().set(reqH);
+        root.prefWidthProperty().set(reqW);
+        root.prefHeightProperty().set(reqH);
 
-    image.fitWidthProperty().bind(root.widthProperty());
-    image.fitHeightProperty().bind(root.heightProperty());
-    image.setImage(LOADING_IMAGE);
-    image.scaleXProperty().set(0.2f);
-    image.scaleYProperty().set(0.2f);
+        image.fitWidthProperty().bind(root.widthProperty());
+        image.fitHeightProperty().bind(root.heightProperty());
+        image.setImage(LOADING_IMAGE);
+        image.scaleXProperty().set(0.2f);
+        image.scaleYProperty().set(0.2f);
 
-    tileBox.prefHeightProperty().bind(root.heightProperty().multiply(0.25));
-    lblText.setText(node.getPath().getFileName().toString());
+        tileBox.prefHeightProperty().bind(root.heightProperty().multiply(0.25));
+        lblText.setText(node.toString());
 
-    float duration = 0.25f;
+        float duration = 0.25f;
 
-    showTileBox = new FadeTransition();
-    showTileBox.setNode(tileBox);
-    showTileBox.setDuration(Duration.seconds(duration));
-    showTileBox.setFromValue(0);
-    showTileBox.setToValue(1);
+        showTileBox = new FadeTransition();
+        showTileBox.setNode(tileBox);
+        showTileBox.setDuration(Duration.seconds(duration));
+        showTileBox.setFromValue(0);
+        showTileBox.setToValue(1);
 
-    hideTileBox = new FadeTransition();
-    hideTileBox.setNode(tileBox);
-    hideTileBox.setDuration(Duration.seconds(duration));
-    hideTileBox.setFromValue(1);
-    hideTileBox.setToValue(0);
-    tileBox.setOpacity(0);
+        hideTileBox = new FadeTransition();
+        hideTileBox.setNode(tileBox);
+        hideTileBox.setDuration(Duration.seconds(duration));
+        hideTileBox.setFromValue(1);
+        hideTileBox.setToValue(0);
+        tileBox.setOpacity(0);
 
-    showRoot = new FadeTransition(Duration.seconds(duration), root);
-    showRoot.setFromValue(0);
-    showRoot.setToValue(1);
+        showRoot = new FadeTransition(Duration.seconds(duration), root);
+        showRoot.setFromValue(0);
+        showRoot.setToValue(1);
 
-    hideRoot = new FadeTransition(Duration.seconds(duration), root);
-    hideRoot.setFromValue(1);
-    hideRoot.setToValue(0);
-    hideRoot.setOnFinished(e -> {
-	root.setDisable(true);
-	root.setMinSize(0, 0);
-	root.setMaxSize(0, 0);
-	root.setPrefSize(0, 0);
-      });
+        hideRoot = new FadeTransition(Duration.seconds(duration), root);
+        hideRoot.setFromValue(1);
+        hideRoot.setToValue(0);
+        hideRoot.setOnFinished(e -> {
+        	root.setDisable(true);
+        	root.setMinSize(0, 0);
+        	root.setMaxSize(0, 0);
+        	root.setPrefSize(0, 0);
+        });
 
-    node.status.onChange(this::update);
-    root.setOpacity(0.0);
-    update(node.status.get());
-  }
+        node.status.onChange(this::update);
+        root.setOpacity(0.0);
+        update(node.status.get());
+    }
 
   private void update(NodeStatus status) {
     if (status.show()) {

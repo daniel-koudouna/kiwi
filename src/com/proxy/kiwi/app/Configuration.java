@@ -28,6 +28,7 @@ public class Configuration {
   private ArrayList<String> keys_up, keys_down;
   private ArrayList<String> keys_fullscreen, keys_exit;
   private ArrayList<String> keys_minus, keys_plus;
+  private ArrayList<String> keys_minimize;
 
   private long timestamp;
 
@@ -56,6 +57,7 @@ public class Configuration {
     this.keys_right = listOf ("D","J","RIGHT");
     this.keys_prev = listOf ("H");
     this.keys_next = listOf ("L");
+    this.keys_minimize = listOf("M");
     this.keys_fullscreen = listOf("F");
     this.keys_exit = listOf("X");
     this.keys_up = listOf("W", "UP");
@@ -94,6 +96,8 @@ public class Configuration {
       return Action.ZOOM_OUT;
     if (in.apply(keys_plus))
       return Action.ZOOM_IN;
+    if (in.apply(keys_minimize))
+      return Action.MINIMIZE;
 
     return Action.NONE;
   }

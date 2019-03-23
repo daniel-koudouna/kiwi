@@ -73,15 +73,16 @@ public class ImageNode extends Node{
       .map(Paths::get);
   }
 
+    @Override
+    public String toString() {
+        return super.toString() + " [" + images.size() + "]";
+    }
+
   @Override
   public Stream<Node> getChildren() {
     return Stream.empty();
   }
 
-  @Override
-  public String toString() {
-    return super.toString() + " " + images.size() + " images";
-  }
 
   public Path before(Path path) {
     for (int i = 0; i < images.size(); i++) {

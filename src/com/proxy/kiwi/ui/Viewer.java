@@ -94,6 +94,7 @@ public class Viewer extends AbstractController {
 	 }
 	}));
 
+
     this.idleTimeline = new Timeline
       (new KeyFrame
        (Duration.millis(config.viewer_idle_time),
@@ -107,9 +108,60 @@ public class Viewer extends AbstractController {
 	     break;
 	   }
 	 }
-	}
-	));
+	}));
   }
+
+	@FXML
+	public void onKeyPress(KeyEvent e) {
+		switch (config.actionFor(e.getCode())) {
+		case LEFT:
+			this.current.update(currentBranch.get().before(this.current.get()));
+			break;
+		case RIGHT:
+			this.current.update(currentBranch.get().after(this.current.get()));
+			break;
+		case PREVIOUS:
+			this.currentBranch.update(getPrevious());
+			break;
+		case NEXT:
+			this.currentBranch.update(getNext());
+			break;
+		case FULL_SCREEN:
+			this.stage.setFullScreenExitHint("Press ESC or F to exit full-screen mode.");
+			this.stage.setFullScreen(!this.stage.isFullScreen());
+			break;
+		case UP:
+	        this.upPressed = true;
+	        break;
+		case DOWN:
+	        this.downPressed = true;
+			break;
+		case ZOOM_IN:
+			view.setScaleX(view.getScaleX() + 0.1);
+			view.setScaleY(view.getScaleY() + 0.1);
+			break;
+		case ZOOM_OUT:
+			view.setScaleX(view.getScaleX() - 0.1);
+			view.setScaleY(view.getScaleY() - 0.1);
+			break;
+		case EXIT:
+			stage.close();
+			break;
+		case MINIMIZE:
+			stage.setIconified(true);
+	    case NONE:
+		default:
+			break;
+		}
+
+		switch(e.getCode()) {
+	    case C:
+		      cache.show();
+		      break;
+		    default:
+		    	  break;
+		}
+	}
 
   private void setImage(Path path) {
     try {
@@ -148,58 +200,6 @@ public class Viewer extends AbstractController {
     }
   }
 
-  @FXML
-  public void onKeyPress(KeyEvent e) {
-    switch (config.actionFor(e.getCode())) {
-    case EXIT:
-      stage.close();
-      break;
-    case FULL_SCREEN:
-      this.stage.setFullScreenExitHint("Press ESC or F to exit.");
-      this.stage.setFullScreen(!this.stage.isFullScreen());
-      break;
-    case LEFT:
-      this.current.update(currentBranch.get().before(this.current.get()));
-      this.idleTimeline.stop();
-      this.idleTimeline.play();
-      break;
-    case RIGHT:
-      this.current.update(currentBranch.get().after(this.current.get()));
-      this.idleTimeline.stop();
-      this.idleTimeline.play();
-      break;
-    case PREVIOUS:
-      this.currentBranch.update(getPrevious());
-      break;
-    case NEXT:
-      this.currentBranch.update(getNext());
-      break;
-    case UP:
-      this.upPressed = true;
-      break;
-    case DOWN:
-      this.downPressed = true;
-      break;
-    case ZOOM_IN:
-      view.setScaleX(view.getScaleX() + 0.1);
-      view.setScaleY(view.getScaleY() + 0.1);
-      break;
-    case ZOOM_OUT:
-      view.setScaleX(view.getScaleX() - 0.1);
-      view.setScaleY(view.getScaleY() - 0.1);
-      break;
-    default:
-      break;
-    }
-
-    switch (e.getCode()) {
-    case C:
-      cache.show();
-      break;
-    default:
-      break;
-    }
-  }
 
   @Override
   protected String path() {

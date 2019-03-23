@@ -1,16 +1,16 @@
 package com.proxy.kiwi.tree;
 
-import com.proxy.kiwi.tree.event.ChildAdded;
-import com.proxy.kiwi.tree.event.TreeBuilt;
-import com.proxy.kiwi.tree.event.TreeEvent;
-import com.proxy.kiwi.tree.node.Node;
-
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+
+import com.proxy.kiwi.tree.event.ChildAdded;
+import com.proxy.kiwi.tree.event.TreeBuilt;
+import com.proxy.kiwi.tree.event.TreeEvent;
+import com.proxy.kiwi.tree.node.Node;
 
 public class Tree extends TreeNode implements Serializable {
 

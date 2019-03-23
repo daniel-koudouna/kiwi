@@ -96,32 +96,6 @@ public class Explorer extends AbstractController {
     onExit(updateTask::join);
   }
 
-
-  @Override
-  public void initialize(URL location, ResourceBundle resources) {
-    root.onEvent(this::handleEvent);
-
-    Thread buildThread = new Thread( () -> {
-	root.build();
-	root.prune();
-
-	pathNodes.add(root);
-	root.getChildren().forEach(pathNodes::add);
-      });
-
-    buildThread.start();
-    searchBox.textProperty().addListener((obs, oldVal, newVal) -> onSearch(newVal));
-
-    fillerPane.prefWidthProperty().bind(topPane.widthProperty());
-    fillerPane.prefHeightProperty().bind(topPane.heightProperty());
-
-    ChangeListener<Number> stageSizeListener = (observable, prev, curr) -> {
-      scroll();
-    };
-
-    stage.widthProperty().addListener(stageSizeListener);
-  }
-
   private void translateYInBounds(Pane pane, double offset) {
     pane.setTranslateY(Math.min(0, Math.max(-pane.getBoundsInLocal().getHeight() + pane.getHeight(), offset)));
   }
@@ -173,6 +147,33 @@ public class Explorer extends AbstractController {
       updateView();
     }
   }
+
+@Override
+public void initialize(URL location, ResourceBundle resources) {
+  root.onEvent(this::handleEvent);
+
+  Thread buildThread = new Thread( () -> {
+	root.build();
+	root.prune();
+
+	pathNodes.add(root);
+	root.getChildren().forEach(pathNodes::add);
+    });
+
+  buildThread.start();
+  searchBox.textProperty().addListener((obs, oldVal, newVal) -> onSearch(newVal));
+
+  fillerPane.prefWidthProperty().bind(topPane.widthProperty());
+  fillerPane.prefHeightProperty().bind(topPane.heightProperty());
+
+  ChangeListener<Number> stageSizeListener = (observable, prev, curr) -> {
+    scroll();
+  };
+	scrollControl.prefHeightProperty().bind(scrollBar.heightProperty().multiply(stage.heightProperty().divide(tilePane.heightProperty())));
+
+  stage.widthProperty().addListener(stageSizeListener);
+}
+
 
   public void createPane(TileComponent tc) {
     for (int i = 0; i < tiles.size(); i++) {

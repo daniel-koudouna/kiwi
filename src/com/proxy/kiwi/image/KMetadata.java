@@ -1,7 +1,8 @@
 package com.proxy.kiwi.image;
 
+import java.io.File;
+
 import com.drew.imaging.ImageMetadataReader;
-import com.drew.imaging.ImageProcessingException;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
@@ -18,12 +19,8 @@ public class KMetadata {
         try {
             this.rawMetadata = ImageMetadataReader.readMetadata(new File(path));
             readDimensions();
-        } catch (ImageProcessingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NullPointerException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+        	System.err.println("Error reading metadata for " + path);
             width = 0;
             height = 0;
         }

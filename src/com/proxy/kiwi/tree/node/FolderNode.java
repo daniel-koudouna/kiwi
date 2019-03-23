@@ -1,14 +1,16 @@
 package com.proxy.kiwi.tree.node;
 
-import com.proxy.kiwi.tree.TreeNode;
-import com.proxy.kiwi.tree.event.ChildAdded;
-import com.proxy.kiwi.tree.event.TreeEvent;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.TreeSet;
 import java.util.stream.Stream;
+
+import com.proxy.kiwi.tree.event.ChildAdded;
+import com.proxy.kiwi.tree.event.TreeEvent;
 
 public class FolderNode extends Node {
 
@@ -76,24 +78,54 @@ public class FolderNode extends Node {
     return Stream.concat(Stream.of(this), this.children.stream().flatMap(Node::stream));
   }
 
+
   @Override
   public void accept(TreeEvent event) {
     children.forEach(c -> c.accept(event));
   }
 
-  @Override
-  public void prune() {
-    children.forEach(TreeNode::prune);
-    for (Iterator<Node> iterator = children.iterator(); iterator.hasNext(); ) {
-      Node child = iterator.next();
-      if (child instanceof FolderNode) {
-	FolderNode folderNode = (FolderNode)child;
-	if (folderNode.children.size() == 1) {
-	  //System.out.println(folderNode.path + " has one child");
-	}
-      }
+    @Override
+    public void prune() {
+    	for (Iterator<Node> outeri = this.children.iterator(); outeri.hasNext(); ) {
+    		Node child = outeri.next();
+    		child.prune();
+    	}
+    	ArrayList<Node> marked = new ArrayList<>();
+    	ArrayList<Node> markedAdd = new ArrayList<>();
+        for (Iterator<Node> iterator = this.children.iterator(); iterator.hasNext(); ) {
+            Node child = iterator.next();
+            if (child instanceof FolderNode) {
+                FolderNode folderNode = (FolderNode)child;
+                if (folderNode.children.size() == 1) {
+                    System.out.println(folderNode.getPath() + " has one child");
+                    folderNode.children.forEach(c -> {
+                    	markedAdd.add(c);
+                    });
+                    marked.add(child);
+                }
+            }
+        }
+        marked.forEach(n -> this.children.remove(n));
+        markedAdd.forEach(n -> {
+        	n.setName(n.parent.toString());
+        	n.parent = this;
+        	this.children.add(n);
+        });
     }
-  }
+
+//  @Override
+//  public void prune() {
+//    children.forEach(TreeNode::prune);
+//    for (Iterator<Node> iterator = children.iterator(); iterator.hasNext(); ) {
+//      Node child = iterator.next();
+//      if (child instanceof FolderNode) {
+//	FolderNode folderNode = (FolderNode)child;
+//	if (folderNode.children.size() == 1) {
+//	  //System.out.println(folderNode.path + " has one child");
+//	}
+//      }
+//    }
+//  }
 
   @Override
   public boolean isEmpty() {
