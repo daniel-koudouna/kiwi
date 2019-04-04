@@ -32,11 +32,12 @@ public class Configuration {
 
   private long timestamp;
 
-  private static Path CONFIG_PATH;
+  public static Path CONFIG_PATH;
+  public static Path TEMP_PATH;
   static {
-    Path dir = Paths.get(System.getProperty("user.home"),".kiwi");
-    dir.toFile().mkdir();
-    CONFIG_PATH = Paths.get(dir.toString(),"config.json");
+    TEMP_PATH = Paths.get(System.getProperty("user.home"),".kiwi");
+    TEMP_PATH.toFile().mkdir();
+    CONFIG_PATH = Paths.get(TEMP_PATH.toString(),"config.json");
   }
   private static String OS = System.getProperty("os.name").toLowerCase();
   public static boolean isWindows() {

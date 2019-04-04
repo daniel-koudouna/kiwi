@@ -2,14 +2,11 @@ package com.proxy.kiwi.tree;
 
 import java.util.stream.Stream;
 
-import com.proxy.kiwi.tree.event.TreeEvent;
 import com.proxy.kiwi.tree.node.Node;
 
 public abstract class TreeNode {
   public TreeNode parent;
 
-  public abstract void accept(TreeEvent event);
-  public abstract void emit(TreeEvent event);
   public abstract void prune();
   public abstract boolean isEmpty();
   public abstract Stream<Node> getChildren();

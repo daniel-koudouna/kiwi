@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.proxy.kiwi.tree.TreeNode;
-import com.proxy.kiwi.tree.event.TreeEvent;
 import com.proxy.kiwi.tree.filter.NodeStatus;
 import com.proxy.kiwi.utils.Dynamic;
 
@@ -98,12 +97,9 @@ public abstract class Node extends TreeNode implements Comparable<Object>, Seria
     return Paths.get(uri);
   }
 
-  @Override
-  public void emit(TreeEvent event) {
-    parent.emit(event);
-  }
-
   public Stream<Node> stream() {
     return Stream.of(this);
   }
+
+  public abstract boolean isValidHashCode();
 }

@@ -10,6 +10,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -21,9 +23,6 @@ import com.proxy.kiwi.app.Kiwi;
 import com.proxy.kiwi.instancer.LaunchParameters;
 import com.proxy.kiwi.tree.Tree;
 import com.proxy.kiwi.tree.TreeNode;
-import com.proxy.kiwi.tree.event.ChildAdded;
-import com.proxy.kiwi.tree.event.TreeBuilt;
-import com.proxy.kiwi.tree.event.TreeEvent;
 import com.proxy.kiwi.tree.filter.AbstractFilter;
 import com.proxy.kiwi.tree.filter.AbstractPipeFilter;
 import com.proxy.kiwi.tree.filter.Filter;
@@ -33,326 +32,223 @@ import com.proxy.kiwi.tree.node.Node;
 import com.proxy.kiwi.utils.Logger;
 import com.proxy.kiwi.utils.TaskQueue;
 
-import javafx.beans.value.ChangeListener;
-import javafx.collections.ObservableList;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
-public class Explorer extends AbstractController {
-  @FXML
-  FlowPane filterPane;
-  @FXML
-  FlowPane tilePane;
-  @FXML
-  TextField searchBox;
-  @FXML
-  GridPane topPane;
-  @FXML
-  Pane fillerPane;
-  @FXML
-  Pane scrollControl;
-  @FXML
-  Pane scrollBar;
+public class Explorer extends AbstractController implements TileContainer {
 
-  Tree root;
-  Tile activeTile;
+    @FXML
+    FlowPane tilePane;
+    @FXML
+    TextField searchBox;
+    @FXML
+    ScrollPane scrollPane;
 
-  AbstractPipeFilter tempRootFilter, rootFilter;
-  Optional<AbstractPipeFilter> queryFilter;
-  List<AbstractPipeFilter> activeFilters;
+    Tree root;
+    Tile activeTile;
 
-  List<TreeNode> pathNodes;
+    AbstractPipeFilter tempRootFilter, rootFilter;
+    Optional<AbstractPipeFilter> queryFilter;
+    List<AbstractPipeFilter> activeFilters;
 
-  TaskQueue updateTask;
+    List<TreeNode> pathNodes;
 
-  Stage stage;
+    TaskQueue updateTask;
 
-  public static final int reqW = 200;
-  public static final int reqH = 300;
-  private List<TileComponent> tiles;
+    HashMap<TreeNode, SubController> subComponents;
 
-  public Explorer(Tree root, Stage stage) {
-    super();
-    this.root = root;
-    this.stage = stage;
+    Stage stage;
 
-    pathNodes = new ArrayList<>();
-    tiles = new ArrayList<>();
+    public static final int reqW = 100;
+    public static final int reqH = 150;
 
-    rootFilter = Filter.or(Filter.root());
-    tempRootFilter = Filter.and(Filter.root());
-    queryFilter = Optional.empty();
-    activeFilters = new LinkedList<>();
-    updateTask = new TaskQueue();
-    updateTask.start();
+    public Explorer(Tree root, Stage stage) {
+        super();
+        this.root = root;
+        this.stage = stage;
 
-    onExit(updateTask::join);
-  }
+        pathNodes = new ArrayList<>();
+        rootFilter = Filter.or(Filter.root());
+        tempRootFilter = Filter.and(Filter.root());
+        queryFilter = Optional.empty();
+        activeFilters = new LinkedList<>();
+        updateTask = new TaskQueue();
+        updateTask.start();
+        subComponents = new HashMap<>();
 
-  private void translateYInBounds(Pane pane, double offset) {
-    pane.setTranslateY(Math.min(0, Math.max(-pane.getBoundsInLocal().getHeight() + pane.getHeight(), offset)));
-  }
-
-  private void scroll() {
-    double percent = -scrollControl.getTranslateY()/(scrollBar.getBoundsInLocal().getHeight());
-    translateYInBounds(tilePane,percent*(tilePane.getBoundsInLocal().getHeight() + tilePane.getHeight()));
-  }
-
-  private void updateScrollComponent() {
-    double percent = -tilePane.getTranslateY()/(tilePane.getBoundsInLocal().getHeight());
-    scrollControl.setTranslateY(Math.max(0,Math.min(scrollBar.getHeight(), percent*scrollBar.getHeight())));
-  }
-
-  @FXML
-  public void onScrollControlDragged(MouseEvent event) {
-    double y = event.getY();
-    double delta = scrollControl.getHeight()/2.0 - y;
-    scrollControl.setTranslateY(Math.max(0, Math.min(scrollBar.getHeight() - scrollControl.getHeight(), scrollControl.getTranslateY() - delta)));
-    scroll();
-  }
-
-  @FXML
-  public void onScrollbarClick(MouseEvent event) {
-    double pos = event.getY() - scrollControl.getHeight()/2.0;
-    scrollControl.setTranslateY(Math.max(0, Math.min(scrollBar.getHeight() - scrollControl.getHeight(), pos)));
-    scroll();
-  }
-
-  public synchronized void handleEvent(TreeEvent event) {
-    if (event instanceof ChildAdded) {
-      Node parent = ((ChildAdded) event).parent;
-      Node child = ((ChildAdded) event).child;
-      int index = ((ChildAdded) event).index;
-
-      for (int i = 0; i < tiles.size(); i++) {
-	TileComponent tc = tiles.get(i);
-	if(tc.tile.node == parent) {
-	  TileComponent tt = new TileComponent(new Tile(this,child), this::createPane);
-	  tiles.add(i + index, tt);
-	  return;
-	}
-      }
-
-      TileComponent t = new TileComponent(new Tile(this,child), this::createPane);
-      tiles.add(t);
-    }
-    if (event instanceof TreeBuilt) {
-      updateView();
-    }
-  }
-
-@Override
-public void initialize(URL location, ResourceBundle resources) {
-  root.onEvent(this::handleEvent);
-
-  Thread buildThread = new Thread( () -> {
-	root.build();
-	root.prune();
-
-	pathNodes.add(root);
-	root.getChildren().forEach(pathNodes::add);
-    });
-
-  buildThread.start();
-  searchBox.textProperty().addListener((obs, oldVal, newVal) -> onSearch(newVal));
-
-  fillerPane.prefWidthProperty().bind(topPane.widthProperty());
-  fillerPane.prefHeightProperty().bind(topPane.heightProperty());
-
-  ChangeListener<Number> stageSizeListener = (observable, prev, curr) -> {
-    scroll();
-  };
-	scrollControl.prefHeightProperty().bind(scrollBar.heightProperty().multiply(stage.heightProperty().divide(tilePane.heightProperty())));
-
-  stage.widthProperty().addListener(stageSizeListener);
-}
-
-
-  public void createPane(TileComponent tc) {
-    for (int i = 0; i < tiles.size(); i++) {
-      TileComponent other = tiles.get(i);
-      if (other == tc) {
-	ObservableList<javafx.scene.Node> children = tilePane.getChildren();
-
-	for (int nextIndex = i + 1; nextIndex < tiles.size(); nextIndex++) {
-	  TileComponent next = tiles.get(nextIndex);
-	  if (next.pane != null) {
-	    Pane target = next.pane;
-	    for (int j = 0; j < children.size(); j++) {
-	      if (children.get(j) == target) {
-		children.add(j, tc.pane);
-		return;
-	      }
-	    }
-	  }
-	}
-
-	children.add(tc.pane );
-	return;
-      }
-    }
-  }
-
-  public void onEnter(Tile tile) {
-    tiles.stream().map(tc -> tc.tile).forEach(t -> {
-	if (t != tile) {
-	  t.hide();
-	} else {
-	  t.show();
-	}
-      });
-  }
-
-  public void onExit(Tile tile) {
-    tile.hide();
-  }
-
-  public void onMove(Tile tile) {
-    onEnter(tile);
-  }
-
-  private void updateTilePane(double delta) {
-    translateYInBounds(tilePane, tilePane.getTranslateY() + delta);
-  }
-
-  @FXML
-  public void onScroll(ScrollEvent event) {
-    double y = 3.5*event.getDeltaY();
-    updateTilePane(y);
-    updateScrollComponent();
-  }
-
-  @FXML
-  public void onKey(KeyEvent event) {
-    switch (event.getCode()) {
-    case BACK_SPACE:
-      if (activeFilters.isEmpty()) {
-	return;
-      }
-      activeFilters.remove(activeFilters.size() - 1);
-      updateView();
-      break;
-    default:
-      break;
-    }
-  }
-
-  public void onClick(Tile tile) {
-    if (!tile.isVisible()) {
-      return;
+        onExit(updateTask::join);
     }
 
-    if (tile.node instanceof ImageNode) {
-      String classpath = System.getProperty("java.class.path");
-      String path = JavaEnvUtils.getJreExecutable("java");
-      String tempDir = System.getProperty("java.io.tmpdir");
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        Thread buildThread = new Thread(() -> {
+            root.prune();
 
-      Path tempFile = Paths.get(tempDir, "kiwi.tmp");
+            pathNodes.add(root);
+            root.getChildren().forEach(pathNodes::add);
+            root.getChildren().forEach(node -> {
+                node.getChildren().forEach(n -> {
+                    Platform.runLater(() -> {
+                        tilePane.getChildren().add(new Tile(this, n).component());
+                    });
+                });
+            });
+            updateView();
+        });
 
-      System.out.println("WRITING TEMP FILE");
+        tilePane.prefWidthProperty().bind(scrollPane.widthProperty().subtract(30));
 
-      LinkedList<ImageNode> nodeList = new LinkedList<>();
+        buildThread.start();
+        searchBox.textProperty().addListener((obs, oldVal, newVal) -> onSearch(newVal));
 
-      root.stream()
-	.filter(n -> n.status.get().show())
-	.filter(n -> n instanceof ImageNode)
-	.map(n -> ((ImageNode)n))
-	.forEach(nodeList::add);
+        scrollPane.widthProperty().addListener( (newV, oldV, obs) -> {
+            subComponents.values().forEach(sc -> sc.root.prefWidthProperty().unbind());
+            tilePane.autosize();
+            //            subComponents.values().forEach(sc -> tilePane.getChildren().add(sc.component()));
+            recalcOpenDialogs();
+            subComponents.values().forEach(sc -> sc.root.prefWidthProperty().bind(tilePane.widthProperty()));
+        });
 
-      Path initialPath = ((ImageNode)tile.node).getImages().findFirst().get();
-
-      LaunchParameters params = new LaunchParameters(initialPath, nodeList);
-
-      try {
-	Files.createFile(tempFile);
-      } catch (FileAlreadyExistsException e) {
-	// OK
-      } catch (IOException e1) {
-	// TODO Auto-generated catch block
-	e1.printStackTrace();
-      }
-
-      try {
-	FileOutputStream fos = new FileOutputStream(tempFile.toFile());
-	ObjectOutputStream oos = new ObjectOutputStream(fos);
-	oos.writeObject(params);
-	oos.close();
-      } catch (FileNotFoundException e2) {
-	// TODO Auto-generated catch block
-	e2.printStackTrace();
-      } catch (IOException e2) {
-	// TODO Auto-generated catch block
-	e2.printStackTrace();
-      }
-
-
-      ProcessBuilder processBuilder = new ProcessBuilder(path, "-cp", classpath, Kiwi.class.getName(), tempFile.toString());
-      processBuilder.inheritIO();
-      try {
-	processBuilder.start();
-      } catch (IOException e) {
-	// TODO Auto-generated catch block
-	e.printStackTrace();
-      }
-
-      return;
     }
 
-    Node n = tile.node;
-    if (pathNodes.contains(n)) {
-      pathNodes.remove(n);
-    } else {
-      pathNodes.add(n);
+    private void recalcOpenDialogs() {
+        Collection<SubController> cs = subComponents.values();
+        boolean anyChanged = true;
+        while (anyChanged) {
+            anyChanged = false;
+            for (SubController s : cs) {
+                anyChanged = anyChanged || s.reposition();
+            }
+        }
+        cs.forEach(s -> s.crop());
     }
 
-    updateView();
-  }
+    @Override
+    public void handleChildClick(Tile tile) {
+        if (!tile.isVisible()) {
+            return;
+        }
 
-  public void onSearch(String query) {
-    if (query.length() > 3) {
-      queryFilter = Optional.of(Filter.and(Filter.name(query)));
-    } else {
-      queryFilter = Optional.empty();
+        if (tile.node instanceof ImageNode) {
+            String classpath = System.getProperty("java.class.path");
+            String path = JavaEnvUtils.getJreExecutable("java");
+            String tempDir = System.getProperty("java.io.tmpdir");
+
+            Path tempFile = Paths.get(tempDir, "kiwi.tmp");
+
+            System.out.println("WRITING TEMP FILE");
+
+            LinkedList<ImageNode> nodeList = new LinkedList<>();
+
+            root.stream().filter(n -> n.status.get().show()).filter(n -> n instanceof ImageNode)
+                    .map(n -> ((ImageNode) n)).forEach(nodeList::add);
+
+            Path initialPath = ((ImageNode) tile.node).getImages().findFirst().get();
+
+            LaunchParameters params = new LaunchParameters(initialPath, nodeList);
+
+            try {
+                Files.createFile(tempFile);
+            } catch (FileAlreadyExistsException e) {
+                // OK
+            } catch (IOException e1) {
+                // TODO Auto-generated catch block
+                e1.printStackTrace();
+            }
+
+            try {
+                FileOutputStream fos = new FileOutputStream(tempFile.toFile());
+                ObjectOutputStream oos = new ObjectOutputStream(fos);
+                oos.writeObject(params);
+                oos.close();
+            } catch (FileNotFoundException e2) {
+                // TODO Auto-generated catch block
+                e2.printStackTrace();
+            } catch (IOException e2) {
+                // TODO Auto-generated catch block
+                e2.printStackTrace();
+            }
+
+            ProcessBuilder processBuilder = new ProcessBuilder(path, "-cp", classpath, Kiwi.class.getName(),
+                    tempFile.toString());
+            processBuilder.inheritIO();
+            try {
+                processBuilder.start();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            return;
+        } else {
+            Node n = tile.node;
+
+            if (pathNodes.contains(n)) {
+//                pathNodes.remove(n);
+            } else {
+                pathNodes.add(n);
+            }
+
+            if (!subComponents.containsKey(n)) {
+                SubController sub = new SubController(tilePane, n, tile.component());
+                Pane component = sub.component();
+                component.visibleProperty().addListener( (newVal, oldVal, obs) -> {
+                    recalcOpenDialogs();
+                });
+                subComponents.put(n, sub);
+            } else {
+                subComponents.get(n).toggle();
+            }
+
+            recalcOpenDialogs();
+
+            updateView();
+        }
     }
 
-    updateView();
-  }
+    public void onSearch(String query) {
+        if (query.length() > 3) {
+            queryFilter = Optional.of(Filter.and(Filter.name(query)));
+        } else {
+            queryFilter = Optional.empty();
+        }
 
-  private void updateView() {
-    LinkedList<AbstractPipeFilter> allFilters = new LinkedList<>();
-    // allFilters.add(rootFilter);
-    allFilters.add(Filter.or(Filter.path(pathNodes)));
-    // allFilters.addAll(activeFilters);
-    queryFilter.ifPresent(allFilters::add);
+        updateView();
+    }
 
-    // if (activeFilters.isEmpty()) {
-    //   allFilters.add(tempRootFilter);
-    // }
+    private void updateView() {
+        LinkedList<AbstractPipeFilter> allFilters = new LinkedList<>();
+        // allFilters.add(rootFilter);
+        allFilters.add(Filter.or(Filter.path(pathNodes)));
+        // allFilters.addAll(activeFilters);
+        queryFilter.ifPresent(allFilters::add);
 
-    Logger.stream(allFilters, "Filters");
+        // if (activeFilters.isEmpty()) {
+        // allFilters.add(tempRootFilter);
+        // }
 
-    AbstractFilter filter = Filter.of(allFilters);
+        Logger.stream(allFilters, "Filters");
 
-    updateTask.enqueue(() -> {
-	root.stream().forEach(n -> {
-	    boolean visible = filter.apply(n);
-	    boolean visibleChildren = n.getChildren().anyMatch(filter::apply);
-	    n.status.update(new NodeStatus(visible, visibleChildren));
-	  });
-      });
-    tilePane.autosize();
-  }
+        AbstractFilter filter = Filter.of(allFilters);
 
-  @Override
-  protected String path() {
-    return "explorer.fxml";
-  }
+        updateTask.enqueue(() -> {
+            root.stream().forEach(n -> {
+                boolean visible = filter.apply(n);
+                boolean visibleChildren = n.getChildren().anyMatch(filter::apply);
+                n.status.update(new NodeStatus(visible, visibleChildren));
+            });
+        });
+        tilePane.autosize();
+    }
+
+    @Override
+    protected String path() {
+        return "new/main.fxml";
+    }
 
 }

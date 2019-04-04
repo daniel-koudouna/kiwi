@@ -1,9 +1,9 @@
 package com.proxy.kiwi.app;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -101,6 +101,8 @@ public class Parameter {
       rawPaths.addAll(params);
     }
 
+    rawPaths.forEach(System.out::println);
+
     List<Parameter> parsed = rawPaths.stream()
       .map(Paths::get)
       .map(Parameter::parse)
@@ -143,7 +145,10 @@ public class Parameter {
       List<Node> nodes = parsed.stream()
 	.map(Parameter::get)
 	.collect(Collectors.toList());
-      Tree tree = new Tree(nodes);
+
+      Tree tree = Tree.from(nodes);
+
+//      Tree tree = new Tree(nodes);
 
       return Optional.of(new Explorer(tree, stage));
     }

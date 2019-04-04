@@ -1,0 +1,41 @@
+.menu-dark {
+    -fx-background-color: #555;
+}
+
+.dark {
+    -fx-background-color: #333;
+    -fx-background: #333;
+    -fx-text-fill: white;
+}
+
+.scroll-bar:vertical {
+    -fx-pref-width: 35;
+    -fx-padding: 12;
+    -fx-background-color: transparent;
+}
+
+.scroll-bar, .scroll-bar:pressed, .scroll-bar:focused {
+    -fx-font-size: 24;
+}
+
+.increment-button:hover, .decrement-button:hover {
+    -fx-background-color: transparent;
+}
+
+.thumb {
+    -fx-background-color: #555;
+}
+
+.transparent {
+    -fx-background-color: transparent;
+}
+
+.close-button {
+   -fx-background-color: #999;
+   -fx-background-radius: 60px;
+}
+
+.close-button:hover {
+  -fx-cursor: hand;
+  -fx-background-color: #333;
+}

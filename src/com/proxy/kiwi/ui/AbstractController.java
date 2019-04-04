@@ -1,15 +1,18 @@
 package com.proxy.kiwi.ui;
 
+import java.io.IOException;
+import java.util.ArrayList;
+
 import com.proxy.kiwi.app.Kiwi;
+
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.Pane;
 
-import java.io.IOException;
-import java.util.ArrayList;
-
 public abstract class AbstractController implements Initializable {
     private ArrayList<Runnable> exitCallbacks;
+
+    public Pane component;
 
     public AbstractController() {
         this.exitCallbacks = new ArrayList<>();
@@ -18,14 +21,16 @@ public abstract class AbstractController implements Initializable {
     protected abstract String path();
 
     public final Pane component() {
-        FXMLLoader loader = new FXMLLoader(Kiwi.resource(path()));
-        loader.setController(this);
-        try {
-            return loader.load();
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (component == null) {
+            FXMLLoader loader = new FXMLLoader(Kiwi.resource(path()));
+            loader.setController(this);
+            try {
+                component = loader.load();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
-        return null;
+        return component;
     }
 
     public void onExit(Runnable r) {
