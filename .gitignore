@@ -7,3 +7,8 @@ out
 .settings
 .idea
 *.iml
+*.xmi
+\.#*
+dist
+build
+externalLibs

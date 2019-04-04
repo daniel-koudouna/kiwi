@@ -1,61 +1,110 @@
 package com.proxy.kiwi.app;
 
-import com.proxy.kiwi.core.services.Config;
-import com.proxy.kiwi.core.services.KiwiInstancer;
-import com.proxy.kiwi.core.utils.Resources;
-import com.proxy.kiwi.core.utils.Stopwatch;
-import com.proxy.kiwi.explorer.KiwiExplorerPane;
-import com.proxy.kiwi.reader.KiwiReadingPane;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+
+import com.proxy.kiwi.instancer.LaunchParameters;
+import com.proxy.kiwi.ui.AbstractController;
+import com.proxy.kiwi.ui.Viewer;
+import com.proxy.kiwi.utils.WindowsCommandLine;
+
+import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-import java.util.List;
+public class Kiwi extends Application {
+    public static URL resource(String path) {
+        return Kiwi.class.getResource("/com/proxy/kiwi/res/" + path);
+    }
 
-public class Kiwi extends KiwiApplication {
+    private Optional<LaunchParameters> readParams(Path path) {
+        LaunchParameters parameters = null;
+        try {
+            File infile = path.toFile();
+            FileInputStream fis = new FileInputStream(infile);
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            parameters = (LaunchParameters) ois.readObject();
+            ois.close();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return Optional.ofNullable(parameters);
+    }
 
-	public static void main(String[] args) {
-		if (args.length != 0) {
-			KiwiInstancer instancer = new KiwiInstancer();
+    private Optional<AbstractController> getController(Stage stage, Configuration config) {
+        List<String> params = getParameters().getUnnamed();
+        if (params.size() == 1 && params.get(0).endsWith(".tmp")) {
+            System.out.println("READING TEMP FILE");
 
-			try {
-				boolean woke = instancer.wakeIfExists(args);
-				if (woke) {
-					System.exit(0);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-			}			
-		}
+            return readParams(Paths.get(params.get(0))).map(parameters -> {
+                Path initialPath = Paths.get(parameters.initial);
+                parameters.nodelist.forEach(in -> in.build());
+                return new Viewer(parameters.nodelist, initialPath, stage, config);
+            });
+        } else {
+            String[] newS = new WindowsCommandLine().getCommandLineArguments(params.toArray(new String[] {}));
+            List<String> newParams = new LinkedList<>();
+            for (String s : newS) {
+                newParams.add(s);
+            }
+            String className = "com.proxy.kiwi.app.Kiwi";
+            for (Iterator<String> it = newParams.iterator(); it.hasNext();) {
+                String p = it.next();
+                it.remove();
+                if (p.equals(className)) {
+                    break;
+                }
+            }
 
-		launch(args);
-	}
+            return Parameter.controller(stage, newParams, config);
+        }
+    }
 
-	protected void initialize(Stage stage) {
-		List<String> params = getParameters().getUnnamed();
+    @Override
+    public void start(Stage stage) throws Exception {
+        long then = System.nanoTime();
 
-		Scene scene;
-		
-		if (params.size() > 0) {
-			Stopwatch.click("Loading reader");
+        Configuration configuration = Configuration.load();
 
-			String path = params.get(0);
+        stage.setTitle("Kiwi");
 
-			scene = new Scene(new KiwiReadingPane(stage, path));
+        Optional<AbstractController> c = getController(stage, configuration);
+        if (!c.isPresent()) {
+            System.exit(1);
+        }
 
-			Stopwatch.click("Loading reader");
-		} else {
-			Stopwatch.click("Loading explorer");
-			
-			scene = new Scene(new KiwiExplorerPane(stage, Config.getOption("path")));
+        AbstractController controller = c.get();
+        stage.setScene(new Scene(controller.component(), 700, 700));
+        stage.setOnCloseRequest((e) -> {
+            configuration.save();
+            controller.exit();
+        });
 
-			Stopwatch.click("Loading explorer");
-		}
-		
-		stage.getIcons().add(new Image(Resources.get("kiwi_small.png").toString()));
-		stage.setScene(scene);
-		stage.show();
-	}
+        stage.getScene().getStylesheets().add(Kiwi.resource("application.css").toString());
+        stage.getScene().getStylesheets().add(Kiwi.resource("new/application.css").toString());
+        stage.show();
 
+        long now = System.nanoTime();
+        System.out.println("Startup Time " + ((now - then) / 1_000_000_000.0) + " s");
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
 }

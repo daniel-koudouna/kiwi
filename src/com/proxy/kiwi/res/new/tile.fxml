@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox fx:id="root" alignment="TOP_CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onMouseClicked="#onClick" prefHeight="200.0" prefWidth="135.0" spacing="5.0" stylesheets="@application.css" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <ImageView fx:id="image" fitHeight="150.0" fitWidth="135.0" pickOnBounds="true" preserveRatio="true" VBox.vgrow="ALWAYS" />
+      <Label fx:id="lblText" styleClass="transparent" text="Label" VBox.vgrow="ALWAYS" />
+      <Label styleClass="transparent" text="Label" VBox.vgrow="ALWAYS" />
+   </children>
+   <styleClass>
+      <String fx:value="dark" />
+      <String fx:value="transparent" />
+   </styleClass>
+</VBox>

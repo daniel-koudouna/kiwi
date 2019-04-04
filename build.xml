@@ -1,197 +1,121 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="kiwi-reader" default="do-deploy" basedir="."
-		xmlns:fx="javafx:com.sun.javafx.tools.ant"
-		xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+	 xmlns:fx="javafx:com.sun.javafx.tools.ant"
+	 xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
-	<path id="maven-ant-tasks.classpath" path="maven-ant-tasks-2.1.3.jar" />
-	<typedef resource="org/apache/maven/artifact/ant/antlib.xml"
-		uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath" />
+  <property name="launch4j.dir" location="C:\Program Files (x86)\Launch4j" />
+  <property name="innosetup.dir" location="C:\Program Files (x86)\Inno Setup 5"/>
 
-	<target name="maven-retrieve">
-		<artifact:pom file="pom.xml" id="maven.project"/>
-		<artifact:dependencies fileSetId="maven-ant-tasks.dependency.fileset" type="jar">
-			<pom refid="maven.project"/>
-		</artifact:dependencies>
+  <path id="maven-ant-tasks.classpath" path="maven-ant-tasks-2.1.3.jar" />
 
-	</target>
+  <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
+	   uri="antlib:org.apache.maven.artifact.ant" classpathref="maven-ant-tasks.classpath" />
 
-	<target name="init-fx-tasks">
-		<echo message="Java home is set to ${java.home}">
-		</echo>
-
-		<path id="fxant">
-			<filelist>
-				<file name="${java.home}\..\lib\ant-javafx.jar"/>
-				<file name="${java.home}\lib\ant-javafx.jar"/>
-				<file name="${java.home}\lib\jfxrt.jar"/>
-				<file name="${java.home}\lib\ext\jfxrt.jar"/>
-				<file name="${basedir}"/>
-			</filelist>
-		</path>
-
-		<taskdef resource="com/sun/javafx/tools/ant/antlib.xml"
-			uri="javafx:com.sun.javafx.tools.ant"
-			classpathref="fxant"/>
-	</target>
-	<target name="setup-staging-area" depends="maven-retrieve">
-		<delete dir="externalLibs" />
-		<delete dir="project" />
-		<delete dir="projectRefs" />
-
-		<mkdir dir="externalLibs" />
-
-		<!-- Copy Maven dependencies -->
-		<copy todir="externalLibs">
-			<fileset refid="maven-ant-tasks.dependency.fileset"/>
-			<mapper type="flatten" />
-		</copy>
-
-		<mkdir dir="project" />
-		<copy todir="project">
-			<fileset dir="${basedir}">
-				<include name="src/**" />
-			</fileset>
-		</copy>
-
-		<mkdir dir="projectRefs" />
-	</target>
-	<target name='do-compile'>
-
-		<delete dir="build" />
-		<mkdir dir="build/src" />
-		<mkdir dir="build/libs" />
-		<mkdir dir="build/classes" />
-
-		<!-- Copy project-libs references -->
-		<copy todir="build/libs">
-			<fileset dir="externalLibs">
-				<include name="*.jar"/>
-			</fileset>
-		</copy>
-
-		<!-- Copy project references -->
-
-		<!-- Copy project sources itself -->
-		<copy todir="build/src">
-			<fileset dir="project/src">
-				<include name="**/*"/>
-			</fileset>
-		</copy>
-
-		<javac includeantruntime="false" source="1.8" target="1.8" srcdir="build/src" destdir="build/classes" encoding="Cp1252">
-			<classpath>
-				<fileset dir="build/libs">
-					<include name="*"/>
-				</fileset>
-			</classpath>
-		</javac>
-
-		<!-- Copy over none Java-Files -->
-		<copy todir="build/classes">
-			<fileset dir="project/src">
-				<exclude name="**/*.java"/>
-			</fileset>
-		</copy>
+  <condition property="isWindows">
+    <os family="windows" />
+  </condition>
 
 
-	</target>
-	<target name="do-deploy" depends="setup-staging-area, do-compile, init-fx-tasks">
-		<delete file="dist"/>
-		<delete file="deploy" />
+  <target name="maven-retrieve">
+    <artifact:pom file="pom.xml" id="maven.project"/>
+    <artifact:dependencies fileSetId="maven-ant-tasks.dependency.fileset" type="jar">
+      <pom refid="maven.project"/>
+    </artifact:dependencies>
+  </target>
 
-		<mkdir dir="dist" />
-		<mkdir dir="dist/libs" />
+  <target name="setup" depends="maven-retrieve">
+    <delete dir="externalLibs" />
 
-		<copy todir="dist/libs">
-			<fileset dir="externalLibs">
-				<include name="*" />
-			</fileset>
-		</copy>
+    <mkdir dir="externalLibs" />
 
-		<jar destfile="dist/libs/kiwi-preloader.jar">
-			<fileset dir="build/classes">
-				<include name=".class"/>
-			</fileset>
-		</jar>
+    <!-- Copy Maven dependencies -->
+    <copy todir="externalLibs">
+      <fileset refid="maven-ant-tasks.dependency.fileset"/>
+      <mapper type="flatten" />
+    </copy>
+  </target>
 
-		<fx:resources id="appRes">
-			<fx:fileset dir="dist" requiredFor="preloader"
-				includes="kiwi-preloader.jar"/>
-			<fx:fileset dir="dist" includes="kiwi.jar"/>
-			<fx:fileset dir="dist" includes="libs/*"/>
-		</fx:resources>
+  <target name='compile'>
 
-		<fx:application id="fxApplication"
-			name="Kiwi"
-			mainClass="com.proxy.kiwi.app.Kiwi"
-			toolkit="fx"
-		/>
+    <delete dir="build" />
+    <mkdir dir="build/src" />
+    <mkdir dir="build/libs" />
+    <mkdir dir="build/classes" />
 
-		<mkdir dir="build/classes/META-INF" />
+    <!-- Copy project-libs references -->
+    <copy todir="build/libs">
+      <fileset dir="externalLibs">
+	<include name="*.jar"/>
+      </fileset>
+    </copy>
+
+    <!-- Copy project sources itself -->
+    <copy todir="build/src">
+      <fileset dir="${basedir}/src">
+	<include name="**/*"/>
+      </fileset>
+    </copy>
+
+    <javac includeantruntime="false" source="1.8" target="1.8" srcdir="build/src" destdir="build/classes" encoding="Cp1252">
+      <classpath>
+	<fileset dir="build/libs">
+	  <include name="*"/>
+	</fileset>
+      </classpath>
+    </javac>
+
+    <!-- Copy over none Java-Files -->
+    <copy todir="build/classes">
+      <fileset dir="${basedir}/src">
+	<exclude name="**/*.java"/>
+      </fileset>
+    </copy>
+  </target>
+
+  <target name="deploy" depends="setup, compile">
+    <delete file="dist"/>
+    <mkdir dir="dist" />
+
+    <jar destfile="dist/kiwi.jar">
+      <zipgroupfileset dir="externalLibs" includes="*.jar"/>
+      <fileset dir="build/classes">
+	<exclude name=".class" />
+      </fileset>
+      <manifest>
+	<attribute name="Main-Class" value="com.proxy.kiwi.app.Kiwi"/>
+      </manifest>
+    </jar>
+
+  </target>
+
+  <target name="deploy-windows" depends="deploy" if="isWindows">
+    <taskdef name="launch4j"
+	     classname="net.sf.launch4j.ant.Launch4jTask"
+	     classpath="${launch4j.dir}/launch4j.jar
+			:${launch4j.dir}/lib/xstream.jar" />
+    <launch4j
+	configFile="./launch4j.config.xml"
+	outfile="dist/kiwi.exe"
+	jar="dist/kiwi.jar"/>
 
 
+    <exec dir="." executable="${innosetup.dir}/Compil32.exe">
+      <arg line="/cc 'kiwi.iss'" />
+    </exec>
 
-		<fx:jar destfile="dist/kiwi.jar">
-			<fx:application refid="fxApplication"/>
-			<fileset dir="build/classes">
-				<exclude name=".class" />
-			</fileset>
-			<fx:resources refid="appRes"/>
+  </target>
 
-			<manifest>
-				<attribute name="Implementation-Vendor" value="com.proxy"/>
-				<attribute name="Implementation-Title" value="Kiwi"/>
-				<attribute name="Implementation-Version" value="0.5"/>
-				<attribute name="JavaFX-Feature-Proxy" value="None"/>
-			</manifest>
-		</fx:jar>
+  <target name="clean-up">
+    <delete dir="build" failonerror="false" />
+    <delete dir="externalLibs" failonerror="false" />
+  </target>
 
+  <target name="do-deploy" depends="deploy, deploy-windows, clean-up">
+  </target>
 
-		<mkdir dir="deploy" />
-		<!-- Need to use ${basedir} because somehow the ant task is calculating the directory differently -->
-		<fx:deploy
-			verbose="true"
-			embedJNLP="false"
-			extension="false"
-			includeDT="false"
-			offlineAllowed="true"
-			outdir="${basedir}/deploy"
-			outfile="kiwi-reader" nativeBundles="exe"
-			updatemode="background" >
-
-			<fx:platform basedir="${java.home}"/>
-			<fx:info title="kiwi" vendor="com.proxy"/>
-
-			<fx:application refId="fxApplication"/>
-			<fx:resources refid="appRes"/>
-		</fx:deploy>
-
-		<antcall target="clean-up">
-		</antcall>
-
-	</target>
-
-	<target name="clean-up">
-		<mkdir dir="out"/>
-
-		<move todir="out" failonerror="false">
-			<fileset dir="deploy/bundles">
-				<include name="*.exe"/>
-			</fileset>
-		</move>
-
-		<delete dir="deploy" failonerror="false" />
-		<delete dir="project" failonerror="false" />
-		<delete dir="projectRefs" failonerror="false" />
-		<delete dir="build" failonerror="false" />
-		<delete dir="externalLibs" failonerror="false" />
-
-	</target>
-
-	<target name="clean">
-		<antcall target="clean-up" />
-		<delete dir="out" failonerror="false"/>
-		<delete dir="dist" failonerror="false" />
-	</target>
+  <target name="clean">
+    <antcall target="clean-up" />
+    <delete dir="dist" failonerror="false" />
+  </target>
 
 </project>
