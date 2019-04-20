@@ -38,7 +38,7 @@ public class ImageCache {
 	        String path = p.toUri().toURL().toExternalForm();
 	        KMetadata data = new KMetadata(p);
 	        System.out.println(data.width  + " x " + data.height);
-	        if (data.height > 2000) {
+	        if (data.height > 4000 || data.width > 4000) {
 	            System.out.println("MAKING SMALLER");
                 cache.add(new Tuple<>(p, new Image(path, -1, data.height/4.0, true, true)));
 	        } else {
