@@ -92,6 +92,8 @@ public class FolderNode extends Node {
                         markedAdd.add(new Tuple<FolderNode,Node>(folderNode,c));
                     });
                     marked.add(child);
+                } else if (folderNode.children.size() == 0) {
+                    marked.add(child);
                 }
             }
         }

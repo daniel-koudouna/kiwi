@@ -27,20 +27,44 @@ public class Tree extends TreeNode implements Serializable {
      *
      */
     private static final long serialVersionUID = 1L;
+
     List<Node> children;
+    final String name;
+    private boolean serializable;
 
     public Tree(List<Node> children) {
         this.children = children;
         this.children.forEach(child -> child.parent = this);
+        this.name = Tree.nameFrom(children);
+        this.serializable = true;
     }
 
     public Tree(Node... children) {
         this(Arrays.asList(children));
     }
 
+    /**
+     * Use a hash code for each folder path to avoid
+     * saving trees with the same name for different folders, such as
+     * ~/Pictures and ~/Dropbox/Pictures
+     */
+    private static String nameFrom(List<Node> nodes) {
+        StringBuilder nameBuilder = new StringBuilder();
+        nodes.stream().forEach(n -> {
+            nameBuilder.append(n.name);
+            nameBuilder.append(Integer.toHexString(n.getPath().hashCode()));
+        });
+        return nameBuilder.toString();
+    }
+
+    /**
+     * After pruning, the data structure will be out of sync with its file representation.
+     * Therefore, it should not be serialized after pruning.
+     */
     @Override
     public void prune() {
         this.children.forEach(Node::prune);
+        this.serializable = false;
     }
 
     @Override
@@ -76,39 +100,52 @@ public class Tree extends TreeNode implements Serializable {
     @Override
     public void update() {
         children.forEach(Node::update);
-        prune();
     }
 
-    private static Tree saveNewTree(String name, List<Node> nodes) {
+    private static Optional<Tree> load(Path path) {
+        try {
+            FileInputStream fis = new FileInputStream(path.toFile());
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            Tree tree  = (Tree) ois.readObject();
+            ois.close();
+            return Optional.of(tree);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Optional.empty();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return Optional.empty();
+        }
+    }
+
+    private void save() {
+        if (!this.serializable) {
+            throw new RuntimeException("Attempted to serialize out of sync data structure");
+        }
+        try {
+            Path filePath = Paths.get(Configuration.TEMP_PATH.toString(), name + ".tree");
+            FileOutputStream fos = new FileOutputStream(filePath.toFile());
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(this);
+            oos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Tree saveNewTree(List<Node> nodes) {
         System.out.println("NO TREE FOUND, MAKING NEW TREE AND SAVING");
         Tree tree = new Tree(nodes);
         tree.build();
-        String filename = name + "__" + Integer.toHexString(tree.hashCode());
-        Path filePath = Paths.get(Configuration.TEMP_PATH.toString(), filename);
-
         System.out.println("SAVING TREE");
-        try {
-            FileOutputStream fos = new FileOutputStream(filePath.toFile());
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(tree);
-            oos.close();
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-
+        tree.save();
         return tree;
     }
 
     public static Tree from(List<Node> nodes) {
-        String name = "";
-        for (Node n : nodes) {
-            name += n.name;
-        }
-        String finalName = "__tree__" + name;
+        String finalName = nameFrom(nodes);
 
         List<Path> possibleTrees = new LinkedList<>();
         try {
@@ -117,28 +154,14 @@ public class Tree extends TreeNode implements Serializable {
             .collect(Collectors.toList());
         } catch (IOException e) {
             e.printStackTrace();
-            return saveNewTree(finalName, nodes);
+            return saveNewTree(nodes);
         }
         if (possibleTrees.isEmpty()) {
-            return saveNewTree(finalName, nodes);
+            return saveNewTree(nodes);
         }
 
         Optional<Tree> hashedTree = possibleTrees.stream()
-        .map(p -> {
-            Optional<Tree> empty = Optional.empty();
-            try {
-                FileInputStream fis = new FileInputStream(p.toFile());
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                Tree tree  = (Tree) ois.readObject();
-                ois.close();
-                return Optional.of(tree);
-            } catch (IOException e) {
-                return empty;
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-                return empty;
-            }
-        })
+        .map(Tree::load)
         .filter(Optional::isPresent)
         .map(Optional::get)
         .findFirst();
@@ -147,10 +170,10 @@ public class Tree extends TreeNode implements Serializable {
             System.out.println("FOUND TREE");
             Tree found =  hashedTree.get();
             found.update();
-            //TODO write back (in new thread???)
+            found.save();
             return found;
+        } else {
+            return saveNewTree(nodes);
         }
-
-        return saveNewTree(finalName, nodes);
     }
 }
