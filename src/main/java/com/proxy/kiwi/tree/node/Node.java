@@ -25,6 +25,7 @@ public abstract class Node extends TreeNode implements Comparable<Object>, Seria
   boolean built;
   public String imagePathRaw;
   public String name;
+  public int checksum;
 
   public Node(TreeNode parent, Path path) throws NodeException {
     this.parent = parent;
@@ -38,11 +39,13 @@ public abstract class Node extends TreeNode implements Comparable<Object>, Seria
     buildImage();
   }
 
+  abstract int checksum();
 
   public final void build() {
     if (!built) {
       buildInternal();
       built = true;
+      this.checksum = checksum();
     }
   }
 
@@ -100,6 +103,4 @@ public abstract class Node extends TreeNode implements Comparable<Object>, Seria
   public Stream<Node> stream() {
     return Stream.of(this);
   }
-
-  public abstract boolean isValidHashCode();
 }

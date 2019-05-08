@@ -5,10 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.proxy.kiwi.utils.Tuple;
@@ -20,7 +18,6 @@ public class FolderNode extends Node {
      */
     private static final long serialVersionUID = 1L;
     public TreeSet<Node> children;
-    private int internalHashCode;
 
     public static Optional<FolderNode> optional(Path path) {
         try {
@@ -34,7 +31,6 @@ public class FolderNode extends Node {
     public FolderNode(Node parent, Path path) throws NodeException {
         super(parent, path);
         children = new TreeSet<>();
-        internalHashCode = 0;
     }
 
     @Override
@@ -109,20 +105,6 @@ public class FolderNode extends Node {
         });
     }
 
-    // @Override
-    // public void prune() {
-    // children.forEach(TreeNode::prune);
-    // for (Iterator<Node> iterator = children.iterator(); iterator.hasNext(); ) {
-    // Node child = iterator.next();
-    // if (child instanceof FolderNode) {
-    // FolderNode folderNode = (FolderNode)child;
-    // if (folderNode.children.size() == 1) {
-    // //System.out.println(folderNode.path + " has one child");
-    // }
-    // }
-    // }
-    // }
-
     @Override
     public boolean isEmpty() {
         return children.isEmpty();
@@ -134,26 +116,58 @@ public class FolderNode extends Node {
     }
 
     @Override
-    public int hashCode() {
-        if (internalHashCode == 0) {
+    public void update() {
+        int newChecksum = checksum();
+        if (this.checksum == newChecksum) {
+            children.forEach(Node::update);
+            System.out.println("checksum same in " + this.getPath());
+        } else {
+            System.out.println("checksum difference in " + this.getPath());
+            children.removeIf(n -> !Files.exists(n.getPath()));
+
             try {
-                List<Path> files = Files.list(getPath()).collect(Collectors.toList());
-                internalHashCode = files.hashCode();
+                boolean hasImages = Files.list(getPath()).anyMatch(Node::isImage);
+                if (!hasImages) {
+                    children.removeIf(n -> n instanceof ImageNode);
+                } else if (children.stream().noneMatch(n -> n instanceof ImageNode)) {
+                    Node self = new ImageNode(this, getPath());
+                    self.build();
+                    children.add(self);
+                }
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            } catch (NodeException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            children.forEach(Node::update);
+
+            try {
+                Files.list(getPath())
+                .filter(p -> children.stream().noneMatch(n -> n.getPath().equals(p)))
+                .forEach(this::handleDir);
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+
+            children.forEach(Node::build);
+            this.checksum = newChecksum;
         }
-        return internalHashCode;
     }
 
     @Override
-    public boolean isValidHashCode() {
-        int old = internalHashCode;
-        this.internalHashCode = 0;
-        hashCode();
-        int newCode = internalHashCode;
-        this.internalHashCode = old;
-        return newCode == old;
+    int checksum() {
+        try {
+            String checksum = Files.list(getPath())
+            .map(p -> p.toString())
+            .collect(StringBuilder::new, StringBuilder::append, StringBuilder::append)
+            .toString();
+            return checksum.hashCode();
+        } catch (IOException e) {
+            return -1;
+        }
     }
 }

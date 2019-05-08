@@ -95,7 +95,13 @@ public class ImageNode extends Node {
     }
 
     @Override
-    public boolean isValidHashCode() {
-        return true;
+    public void update() {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    int checksum() {
+        return 0;
     }
 }

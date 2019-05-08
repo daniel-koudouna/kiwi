@@ -10,6 +10,7 @@ public abstract class TreeNode {
   public abstract void prune();
   public abstract boolean isEmpty();
   public abstract Stream<Node> getChildren();
+  public abstract void update();
 
   public boolean hasChildren() {
     return getChildren().count() > 0;

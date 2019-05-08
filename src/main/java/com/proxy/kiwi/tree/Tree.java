@@ -73,6 +73,12 @@ public class Tree extends TreeNode implements Serializable {
         return hash;
     }
 
+    @Override
+    public void update() {
+        children.forEach(Node::update);
+        prune();
+    }
+
     private static Tree saveNewTree(String name, List<Node> nodes) {
         System.out.println("NO TREE FOUND, MAKING NEW TREE AND SAVING");
         Tree tree = new Tree(nodes);
@@ -97,15 +103,6 @@ public class Tree extends TreeNode implements Serializable {
         return tree;
     }
 
-    public boolean isValidHashCode() {
-        for (Node n : this.getChildren().collect(Collectors.toList())) {
-            if (!n.isValidHashCode()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
     public static Tree from(List<Node> nodes) {
         String name = "";
         for (Node n : nodes) {
@@ -126,8 +123,6 @@ public class Tree extends TreeNode implements Serializable {
             return saveNewTree(finalName, nodes);
         }
 
-        System.out.println("FOUND " + possibleTrees.size() + " POSSIBLE FILES");
-
         Optional<Tree> hashedTree = possibleTrees.stream()
         .map(p -> {
             Optional<Tree> empty = Optional.empty();
@@ -146,12 +141,14 @@ public class Tree extends TreeNode implements Serializable {
         })
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .filter(Tree::isValidHashCode)
         .findFirst();
 
         if (hashedTree.isPresent()) {
             System.out.println("FOUND TREE");
-            return hashedTree.get();
+            Tree found =  hashedTree.get();
+            found.update();
+            //TODO write back (in new thread???)
+            return found;
         }
 
         return saveNewTree(finalName, nodes);
