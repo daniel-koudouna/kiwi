@@ -29,7 +29,7 @@ import com.proxy.kiwi.tree.filter.Filter;
 import com.proxy.kiwi.tree.filter.NodeStatus;
 import com.proxy.kiwi.tree.node.ImageNode;
 import com.proxy.kiwi.tree.node.Node;
-import com.proxy.kiwi.utils.Logger;
+import com.proxy.kiwi.utils.Log;
 import com.proxy.kiwi.utils.TaskQueue;
 
 import javafx.application.Platform;
@@ -106,10 +106,11 @@ public class Explorer extends AbstractController implements TileContainer {
         buildThread.start();
         searchBox.textProperty().addListener((obs, oldVal, newVal) -> onSearch(newVal));
 
-        scrollPane.widthProperty().addListener( (newV, oldV, obs) -> {
+        scrollPane.widthProperty().addListener((newV, oldV, obs) -> {
             subComponents.values().forEach(sc -> sc.root.prefWidthProperty().unbind());
             tilePane.autosize();
-            //            subComponents.values().forEach(sc -> tilePane.getChildren().add(sc.component()));
+            // subComponents.values().forEach(sc ->
+            // tilePane.getChildren().add(sc.component()));
             recalcOpenDialogs();
             subComponents.values().forEach(sc -> sc.root.prefWidthProperty().bind(tilePane.widthProperty()));
         });
@@ -141,7 +142,7 @@ public class Explorer extends AbstractController implements TileContainer {
 
             Path tempFile = Paths.get(tempDir, "kiwi.tmp");
 
-            System.out.println("WRITING TEMP FILE");
+            Log.debug(Explorer.class, "Writing temporary file");
 
             LinkedList<ImageNode> nodeList = new LinkedList<>();
 
@@ -189,7 +190,7 @@ public class Explorer extends AbstractController implements TileContainer {
             Node n = tile.node;
 
             if (pathNodes.contains(n)) {
-//                pathNodes.remove(n);
+                // pathNodes.remove(n);
             } else {
                 pathNodes.add(n);
             }
@@ -197,7 +198,7 @@ public class Explorer extends AbstractController implements TileContainer {
             if (!subComponents.containsKey(n)) {
                 SubController sub = new SubController(tilePane, n, tile.component());
                 Pane component = sub.component();
-                component.visibleProperty().addListener( (newVal, oldVal, obs) -> {
+                component.visibleProperty().addListener((newVal, oldVal, obs) -> {
                     recalcOpenDialogs();
                 });
                 subComponents.put(n, sub);
@@ -231,8 +232,6 @@ public class Explorer extends AbstractController implements TileContainer {
         // if (activeFilters.isEmpty()) {
         // allFilters.add(tempRootFilter);
         // }
-
-        Logger.stream(allFilters, "Filters");
 
         AbstractFilter filter = Filter.of(allFilters);
 

@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import com.proxy.kiwi.tree.TreeNode;
+import com.proxy.kiwi.utils.Log;
 
 public class ImageNode extends Node {
 
@@ -24,7 +25,7 @@ public class ImageNode extends Node {
         try {
             return Optional.of(new ImageNode(null, path));
         } catch (NodeException e) {
-            System.err.println("Could not open file " + path);
+            Log.error(ImageNode.class, "Could not open file " + path);
             return Optional.empty();
         }
     }

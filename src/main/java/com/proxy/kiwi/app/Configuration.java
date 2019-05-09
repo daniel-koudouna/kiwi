@@ -12,6 +12,7 @@ import java.util.function.Function;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.proxy.kiwi.utils.Log;
 
 import javafx.scene.input.KeyCode;
 
@@ -143,7 +144,7 @@ public class Configuration {
       return Optional.of(gson.fromJson(file, Configuration.class));
     } catch (IOException e) {
       // e.printStackTrace();
-      System.err.println("Error while reading configuration file.");
+      Log.error(Configuration.class, "Error while reading configuration file.");
       return Optional.empty();
     }
   }

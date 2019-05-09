@@ -18,6 +18,7 @@ import com.proxy.kiwi.app.Kiwi;
 import com.proxy.kiwi.instancer.LaunchParameters;
 import com.proxy.kiwi.tree.node.ImageNode;
 import com.proxy.kiwi.tree.node.Node;
+import com.proxy.kiwi.utils.Log;
 
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
@@ -175,7 +176,7 @@ public class SubController extends AbstractController implements TileContainer {
 
             Path tempFile = Paths.get(tempDir, "kiwi.tmp");
 
-            System.out.println("WRITING TEMP FILE");
+            Log.debug(SubController.class, "Writing temporary file");
 
             LinkedList<ImageNode> nodeList = new LinkedList<>();
 

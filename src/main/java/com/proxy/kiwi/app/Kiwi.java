@@ -15,6 +15,7 @@ import java.util.Optional;
 import com.proxy.kiwi.instancer.LaunchParameters;
 import com.proxy.kiwi.ui.AbstractController;
 import com.proxy.kiwi.ui.Viewer;
+import com.proxy.kiwi.utils.Log;
 import com.proxy.kiwi.utils.WindowsCommandLine;
 
 import javafx.application.Application;
@@ -45,8 +46,7 @@ public class Kiwi extends Application {
     private Optional<AbstractController> getController(Stage stage, Configuration config) {
         List<String> params = getParameters().getUnnamed();
         if (params.size() == 1 && params.get(0).endsWith(".tmp")) {
-            System.out.println("READING TEMP FILE");
-
+            Log.debug(Kiwi.class, "Reading temporary file");
             return readParams(Paths.get(params.get(0))).map(parameters -> {
                 Path initialPath = Paths.get(parameters.initial);
                 parameters.nodelist.forEach(in -> in.build());
@@ -95,7 +95,7 @@ public class Kiwi extends Application {
         stage.show();
 
         long now = System.nanoTime();
-        System.out.println("Startup Time " + ((now - then) / 1_000_000_000.0) + " s");
+        Log.info(Kiwi.class, "Startup Time " + ((now - then) / 1_000_000_000.0) + " s");
     }
 
     public static void main(String[] args) {

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import com.proxy.kiwi.utils.Log;
+
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.Pane;
@@ -23,7 +25,7 @@ public abstract class AbstractController implements Initializable {
         if (component == null) {
             try {
                 URL url = this.getClass().getResource(path());
-                System.out.println(url);
+                Log.debug(AbstractController.class, "Loading FXML file: " + url);
                 FXMLLoader loader = new FXMLLoader(url);
                 loader.setController(this);
                 component = loader.load();

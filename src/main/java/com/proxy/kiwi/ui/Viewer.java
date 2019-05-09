@@ -14,6 +14,7 @@ import com.proxy.kiwi.app.Configuration;
 import com.proxy.kiwi.image.ImageCache;
 import com.proxy.kiwi.tree.node.ImageNode;
 import com.proxy.kiwi.utils.Dynamic;
+import com.proxy.kiwi.utils.Log;
 
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -168,7 +169,7 @@ public class Viewer extends AbstractController {
       long then = System.nanoTime();
       view.setImage(new Image(path.toUri().toURL().toExternalForm()));
       long now = System.nanoTime();
-      System.out.println("Time taken: " + (now - then)/1_000_000_000.0);
+      Log.info(Viewer.class, "Time taken: " + (now - then)/1_000_000_000.0);
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }
@@ -224,7 +225,7 @@ public class Viewer extends AbstractController {
 		 timeline.stop();
 		 view.setImage(im);
 		 long now = System.nanoTime();
-		 System.out.println("Time taken: " + (now - then)/1_000_000_000.0);
+		 Log.info(Viewer.class, "Time taken: " + (now - then)/1_000_000_000.0);
 	       });
 	    }));
 	timeline.setCycleCount(Animation.INDEFINITE);

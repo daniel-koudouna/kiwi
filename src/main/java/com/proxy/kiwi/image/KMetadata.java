@@ -6,6 +6,7 @@ import com.drew.imaging.ImageMetadataReader;
 import com.drew.metadata.Directory;
 import com.drew.metadata.Metadata;
 import com.drew.metadata.Tag;
+import com.proxy.kiwi.utils.Log;
 
 public class KMetadata {
     Metadata rawMetadata;
@@ -17,7 +18,7 @@ public class KMetadata {
             this.rawMetadata = ImageMetadataReader.readMetadata(path.toFile());
             readDimensions();
         } catch (Exception e) {
-        	System.err.println("Error reading metadata for " + path);
+        	Log.error(KMetadata.class, "Error reading metadata for " + path);
             width = 0;
             height = 0;
         }

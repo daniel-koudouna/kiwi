@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
+import com.proxy.kiwi.utils.Log;
 import com.proxy.kiwi.utils.Tuple;
 
 public class FolderNode extends Node {
@@ -23,7 +24,7 @@ public class FolderNode extends Node {
         try {
             return Optional.of(new FolderNode(null, path));
         } catch (NodeException e) {
-            System.err.println("Error opening " + path);
+            Log.error(FolderNode.class, "Error opening " + path);
             return Optional.empty();
         }
     }
@@ -122,9 +123,8 @@ public class FolderNode extends Node {
         int newChecksum = checksum();
         if (this.checksum == newChecksum) {
             children.forEach(Node::update);
-            System.out.println("checksum same in " + this.getPath());
         } else {
-            System.out.println("checksum difference in " + this.getPath());
+            Log.info(FolderNode.class, "Checksum difference in " + this.getPath());
             children.removeIf(n -> !Files.exists(n.getPath()));
 
             try {

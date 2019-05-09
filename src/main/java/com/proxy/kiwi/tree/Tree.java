@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import com.proxy.kiwi.app.Configuration;
 import com.proxy.kiwi.tree.node.Node;
+import com.proxy.kiwi.utils.Log;
 
 public class Tree extends TreeNode implements Serializable {
 
@@ -136,10 +137,9 @@ public class Tree extends TreeNode implements Serializable {
     }
 
     private static Tree saveNewTree(List<Node> nodes) {
-        System.out.println("NO TREE FOUND, MAKING NEW TREE AND SAVING");
+        Log.debug(Tree.class, "No Tree found, creating new Tree");
         Tree tree = new Tree(nodes);
         tree.build();
-        System.out.println("SAVING TREE");
         tree.save();
         return tree;
     }
@@ -167,7 +167,7 @@ public class Tree extends TreeNode implements Serializable {
         .findFirst();
 
         if (hashedTree.isPresent()) {
-            System.out.println("FOUND TREE");
+            Log.debug(Tree.class, "Found existing Tree, updating");
             Tree found =  hashedTree.get();
             found.update();
             found.save();

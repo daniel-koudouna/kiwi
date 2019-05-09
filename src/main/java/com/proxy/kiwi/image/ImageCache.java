@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.Optional;
 import java.util.Queue;
 
-import com.proxy.kiwi.utils.Logger;
+import com.proxy.kiwi.utils.Log;
 import com.proxy.kiwi.utils.Tuple;
 
 import javafx.scene.image.Image;
@@ -37,9 +37,9 @@ public class ImageCache {
 	    try {
 	        String path = p.toUri().toURL().toExternalForm();
 	        KMetadata data = new KMetadata(p);
-	        System.out.println(data.width  + " x " + data.height);
+	        Log.info(ImageCache.class,"Reading image with dimensions " + data.width  + " x " + data.height);
 	        if (data.height > 4000 || data.width > 4000) {
-	            System.out.println("MAKING SMALLER");
+	            Log.debug(ImageCache.class, "Resizing large image");
                 cache.add(new Tuple<>(p, new Image(path, -1, data.height/4.0, true, true)));
 	        } else {
 	            cache.add(new Tuple<>(p, new Image(path)));
@@ -93,6 +93,6 @@ public class ImageCache {
   }
 
   public void show() {
-    Logger.stream(cache.stream().map(t -> t.x), "Cache");
+    Log.list(ImageCache.class, Log::info, cache.stream().map(t -> t.x), "Cache");
   }
 }

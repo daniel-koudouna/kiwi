@@ -7,6 +7,7 @@ import com.proxy.kiwi.image.KImage;
 import com.proxy.kiwi.image.KMetadata;
 import com.proxy.kiwi.tree.filter.NodeStatus;
 import com.proxy.kiwi.tree.node.Node;
+import com.proxy.kiwi.utils.Log;
 
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
@@ -128,7 +129,7 @@ public class Tile extends AbstractController {
         double ratio = reqW / (reqH * 1.0);
 
         if (node.imagePath == null) {
-            // System.out.println(node.path + " has no image path");
+            Log.error(Tile.class, "No image path found for " + node.name);
         } else {
             KMetadata data = new KMetadata(node.getPath());
             KImage im;
